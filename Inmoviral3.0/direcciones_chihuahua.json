@@ -1,0 +1,27 @@
+[
+  {
+    "Municipio": "Chihuahua",
+    "Colonias": [
+      { "Nombre": "Centro", "CodigoPostal": "31000" },
+      { "Nombre": "San Felipe Viejo", "CodigoPostal": "31203" },
+      { "Nombre": "San Felipe Etapa V", "CodigoPostal": "31203" },
+      { "Nombre": "Mirador", "CodigoPostal": "31205" },
+      { "Nombre": "Dale", "CodigoPostal": "31050" }
+    ]
+  },
+  {
+    "Municipio": "Delicias",
+    "Colonias": [
+      { "Nombre": "Centro", "CodigoPostal": "33000" },
+      { "Nombre": "Laderas del Norte", "CodigoPostal": "33000" },
+      { "Nombre": "Industrial Sur", "CodigoPostal": "33016" }
+    ]
+  },
+  {
+    "Municipio": "Cuauhtémoc",
+    "Colonias": [
+      { "Nombre": "Centro", "CodigoPostal": "31500" },
+      { "Nombre": "Benito Juárez", "CodigoPostal": "31510" }
+    ]
+  }
+]
