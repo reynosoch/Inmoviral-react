@@ -1,16 +1,24 @@
 import React from 'react';
+import styles from '../App.module.css'; // Jalamos los estilos desde aquí
 
-function Navbar() {
+function Navbar({ alCambiarVista }) {
   return (
-    <nav style={{ display: 'flex', justifyContent: 'space-between', padding: '15px 40px', background: '#1e293b', color: 'white', alignItems: 'center' }}>
-      <h2>InmoViral</h2>
-      <div style={{ display: 'flex', gap: '20px' }}>
-        <a href="#catalogo" style={{ color: 'white', textDecoration: 'none' }}>Catálogo</a>
-        <a href="#servicios" style={{ color: 'white', textDecoration: 'none' }}>Servicios Virales</a>
+    <nav className={styles.barraNavegacion}>
+      <h2 onClick={() => alCambiarVista('inicio')} className={styles.logo}>
+        InmoViral
+      </h2>
+      <div className={styles.menuEnlaces}>
+        <span onClick={() => alCambiarVista('inicio')} className={styles.enlace}>
+          Catálogo
+        </span>
       </div>
-      <div>
-        <button style={{ background: 'transparent', color: 'white', border: '1px solid white', padding: '8px 15px', borderRadius: '5px', marginRight: '10px', cursor: 'pointer' }}>Iniciar Sesión</button>
-        <button style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '5px', cursor: 'pointer' }}>Registrarse</button>
+      <div className={styles.menuBotones}>
+        <button onClick={() => alCambiarVista('login')} className={styles.btnLogin}>
+          Iniciar Sesión
+        </button>
+        <button onClick={() => alCambiarVista('registro')} className={styles.btnRegistro}>
+          Registrarse
+        </button>
       </div>
     </nav>
   );
