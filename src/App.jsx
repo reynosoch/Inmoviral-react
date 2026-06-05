@@ -10,7 +10,6 @@ function App() {
   };
 
   useEffect(() => {
-    // Custom cursor interactivo
     const cursor = document.getElementById('cursor');
     const ring = document.getElementById('cursorRing');
     let mx = 0, my = 0, rx = 0, ry = 0;
@@ -31,7 +30,6 @@ function App() {
     };
     animRing();
 
-    // Efecto hover en elementos clickeables
     const elements = document.querySelectorAll('a, button, .gal, .feature-item');
     const handleMouseEnter = () => { if(ring) { ring.style.transform = 'translate(-50%,-50%) scale(1.8)'; ring.style.borderColor = 'rgba(160,120,64,0.8)'; }};
     const handleMouseLeave = () => { if(ring) { ring.style.transform = 'translate(-50%,-50%) scale(1)'; ring.style.borderColor = 'rgba(160,120,64,0.5)'; }};
@@ -41,14 +39,12 @@ function App() {
       el.addEventListener('mouseleave', handleMouseLeave);
     });
 
-    // Menú oscuro al hacer scroll
     const nav = document.getElementById('nav');
     const handleScroll = () => { 
       if(nav) nav.classList.toggle('scrolled', window.scrollY > 60); 
     };
     window.addEventListener('scroll', handleScroll);
 
-    // Animación de aparición (Reveal)
     const reveals = document.querySelectorAll('.reveal');
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => { 
@@ -80,45 +76,16 @@ function App() {
       <nav id="nav">
         <a href="#" className="logo">INMOVIRAL</a>
         <ul className="nav-links">
-          <li><a href="#about" className="active">{t('nav_inicio')}</a></li>
-          <li><a href="#gallery">{t('nav_nosotros')}</a></li>
-          <li><a href="#projects">{t('nav_catalogo')}</a></li>
-          <li><a href="#contact">{t('nav_servicios')}</a></li>
+          <li><a href="#about">{t('nav_1')}</a></li>
+          <li><a href="#gallery">{t('nav_2')}</a></li>
+          <li><a href="#projects">{t('nav_3')}</a></li>
+          <li><a href="#contact">{t('nav_4')}</a></li>
         </ul>
 
-        {/* Contenedor de Botones de Idioma e Ingreso */}
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button 
-              onClick={() => cambiarIdioma('es')} 
-              style={{ 
-                background: i18n.language === 'es' ? '#A07840' : 'transparent', 
-                color: 'white', 
-                border: '1px solid #A07840', 
-                padding: '6px 12px', 
-                cursor: 'pointer', 
-                fontSize: '11px', 
-                letterSpacing: '0.1em',
-                transition: 'all 0.3s'
-              }}
-            >
-              ES
-            </button>
-            <button 
-              onClick={() => cambiarIdioma('en')} 
-              style={{ 
-                background: i18n.language === 'en' ? '#A07840' : 'transparent', 
-                color: 'white', 
-                border: '1px solid #A07840', 
-                padding: '6px 12px', 
-                cursor: 'pointer', 
-                fontSize: '11px', 
-                letterSpacing: '0.1em',
-                transition: 'all 0.3s'
-              }}
-            >
-              EN
-            </button>
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '5px' }}>
+            <button onClick={() => cambiarIdioma('es')} style={{ background: i18n.language === 'es' ? '#A07840' : 'transparent', color: 'white', border: '1px solid #A07840', padding: '6px 12px', cursor: 'pointer', fontSize: '11px', letterSpacing: '0.1em' }}>ES</button>
+            <button onClick={() => cambiarIdioma('en')} style={{ background: i18n.language === 'en' ? '#A07840' : 'transparent', color: 'white', border: '1px solid #A07840', padding: '6px 12px', cursor: 'pointer', fontSize: '11px', letterSpacing: '0.1em' }}>EN</button>
           </div>
           <a href="#contact" className="nav-cta">{t('nav_btn')}</a>
         </div>
@@ -131,43 +98,30 @@ function App() {
         </div>
         <div className="hero-overlay"></div>
 
-        {/* 
-          Metemos el hero-body como el contenedor padre directo de los textos. 
-          Al aplicar padding izquierdo estricto de 60px, forzamos que tanto la etiqueta dorada 
-          como el título H1 y el párrafo se alineen perfectamente bajo el logo sin moverse.
-        */}
-        <div className="hero-body" style={{ paddingLeft: '60px', paddingBottom: '90px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
-          
-          {/* Aquí el Tag Dorado se mantendrá abajo de la barra de navegación, alineado y con su palito CSS activo */}
-          <div className="hero-tag" style={{ display: 'inline-flex', alignItems: 'center', marginBottom: '28px' }}>
-            {t('hero_tag')}
-          </div>
+        <div className="hero-body">
+          {/* Al estar aquí adentro, el CSS lo empuja abajo y lo alinea perfecto con la "P" de Propiedades */}
+          <div className="hero-tag">{t('hero_tag')}</div>
 
-          {/* Caja del Título alineada por la izquierda */}
+          {/* Condicionamos los saltos de línea para que las cajas tipográficas queden idénticas */}
           {i18n.language === 'es' ? (
-            <h1 className="hero-title" style={{ textAlign: 'left', margin: '0 0 30px 0' }}>
+            <h1 className="hero-title">
               {t('hero_title_1')}<br />
               <em>{t('hero_title_italic')}</em><br />
               {t('hero_title_2')}
             </h1>
           ) : (
-            <h1 className="hero-title" style={{ textAlign: 'left', margin: '0 0 30px 0' }}>
-              Exceptional<br />
-              <em>Properties</em> for<br />
-              Discerning<br />
-              Clients
+            <h1 className="hero-title">
+              {t('hero_title_1')}<br />
+              <em>{t('hero_title_italic')}</em> for<br />
+              {t('hero_title_2')}
             </h1>
           )}
           
-          <p className="hero-desc" style={{ textAlign: 'left', margin: '0 0 44px 0' }}>{t('hero_desc')}</p>
+          <p className="hero-desc">{t('hero_desc')}</p>
           
-          <div className="hero-actions" style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
-            <a href="#contact" className="btn-primary">
-              {i18n.language === 'es' ? t('btn_explorar') : 'Explore our portfolio →'}
-            </a>
-            <a href="#gallery" className="btn-ghost">
-              {i18n.language === 'es' ? t('btn_ver_servicios') : 'Real Client Experiences →'}
-            </a>
+          <div className="hero-actions">
+            <a href="#gallery" className="btn-primary">{t('btn_explorar')}</a>
+            <a href="#projects" className="btn-ghost">{t('btn_ver_servicios')}</a>
           </div>
         </div>
 
@@ -183,7 +137,7 @@ function App() {
         </div>
       </section>
 
-      {/* ══ TICKER / CINTA FLOTANTE ══ */}
+      {/* ══ TICKER ══ */}
       <div className="ticker-bar">
         <div className="ticker-inner">
           <span className="ticker-item">{t('ticker_1')}</span>
@@ -201,7 +155,7 @@ function App() {
         </div>
       </div>
 
-      {/* ══ FEATURES / VALOR AGREGADO ══ */}
+      {/* ══ FEATURES ══ */}
       <section className="features">
         <div className="features-grid">
           <div className="feature-item reveal">
@@ -247,7 +201,7 @@ function App() {
         </div>
       </section>
 
-      {/* ══ GALLERY / CATÁLOGO DE CASAS ══ */}
+      {/* ══ GALLERY ══ */}
       <section className="gallery" id="gallery">
         <div className="section-header reveal">
           <div>
@@ -257,18 +211,18 @@ function App() {
           <a href="#" className="view-all">{t('gal_view_all')}</a>
         </div>
         <div className="gallery-grid">
-          <div className="gal reveal"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80&auto=format&fit=crop" alt="Casa 1" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t1')}</span></div>
-          <div className="gal reveal reveal-delay-1"><img src="https://images.unsplash.com/photo-1503174971373-b1f69850bded?w=600&q=80&auto=format&fit=crop" alt="Casa 2" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t2')}</span></div>
-          <div className="gal reveal reveal-delay-2"><img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80&auto=format&fit=crop" alt="Casa 3" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t3')}</span></div>
-          <div className="gal reveal reveal-delay-3"><img src="https://images.unsplash.com/photo-1565372195458-9de0b320ef04?w=600&q=80&auto=format&fit=crop" alt="Casa 4" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t4')}</span></div>
-          <div className="gal reveal"><img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=600&q=80&auto=format&fit=crop" alt="Casa 5" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t5')}</span></div>
-          <div className="gal reveal reveal-delay-1"><img src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=600&q=80&auto=format&fit=crop" alt="Casa 6" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t6')}</span></div>
-          <div className="gal reveal reveal-delay-2"><img src="https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=600&q=80&auto=format&fit=crop" alt="Casa 7" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t7')}</span></div>
-          <div className="gal reveal reveal-delay-3"><img src="https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600&q=80&auto=format&fit=crop" alt="Casa 8" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t8')}</span></div>
+          <div className="gal reveal"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80&auto=format&fit=crop" alt="Luxury Home 1" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t1')}</span></div>
+          <div className="gal reveal reveal-delay-1"><img src="https://images.unsplash.com/photo-1503174971373-b1f69850bded?w=600&q=80&auto=format&fit=crop" alt="Premium Apartment" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t2')}</span></div>
+          <div className="gal reveal reveal-delay-2"><img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80&auto=format&fit=crop" alt="Waterfront Estate" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t3')}</span></div>
+          <div className="gal reveal reveal-delay-3"><img src="https://images.unsplash.com/photo-1565372195458-9de0b320ef04?w=600&q=80&auto=format&fit=crop" alt="Investment Property" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t4')}</span></div>
+          <div className="gal reveal"><img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=600&q=80&auto=format&fit=crop" alt="Development Land" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t5')}</span></div>
+          <div className="gal reveal reveal-delay-1"><img src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=600&q=80&auto=format&fit=crop" alt="Commercial Asset" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t6')}</span></div>
+          <div className="gal reveal reveal-delay-2"><img src="https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=600&q=80&auto=format&fit=crop" alt="Prime Land Parcel" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t7')}</span></div>
+          <div className="gal reveal reveal-delay-3"><img src="https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600&q=80&auto=format&fit=crop" alt="Penthouse" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t8')}</span></div>
         </div>
       </section>
 
-      {/* ══ ABOUT / NOSOTROS ══ */}
+      {/* ══ ABOUT ══ */}
       <section className="about" id="about">
         <div className="about-inner">
           <div>
@@ -294,7 +248,7 @@ function App() {
         </div>
       </section>
 
-      {/* ══ PRODUCTS / SOLUTIONS ══ */}
+      {/* ══ PRODUCTS ══ */}
       <section className="products" id="projects">
         <div className="section-header reveal">
           <div>
@@ -332,7 +286,7 @@ function App() {
         </div>
       </section>
 
-      {/* ══ PROCESS / PROCESO DE PASOS ══ */}
+      {/* ══ PROCESS ══ */}
       <section className="process">
         <div className="section-header reveal">
           <div>
@@ -369,7 +323,7 @@ function App() {
         </div>
       </section>
 
-      {/* ══ TESTIMONIALS / OPINIONES ══ */}
+      {/* ══ TESTIMONIALS ══ */}
       <section className="testimonials">
         <div className="section-header reveal">
           <div>
@@ -426,7 +380,7 @@ function App() {
             <p className="footer-tagline">{t('footer_tagline')}</p>
             <div className="footer-social">
               <a href="#" className="social-btn">in</a>
-              <a href="#" className="social-btn">fb</a>
+              <a href="#" className="social-btn">vk</a>
               <a href="#" className="social-btn">ig</a>
               <a href="#" className="social-btn">yt</a>
             </div>

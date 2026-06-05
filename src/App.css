@@ -132,6 +132,14 @@ nav.scrolled {
   transform: scale(1.06);
   animation: heroZoom 12s ease-out forwards;
 }
+
+.hero-tag::before {
+  content: '';
+  width: 40px; 
+  height: 1px;
+  background: var(--gold-light);
+}
+
 @keyframes heroZoom {
   from { transform: scale(1.06); }
   to   { transform: scale(1.0); }
