@@ -98,18 +98,16 @@ function App() {
         </div>
         <div className="hero-overlay"></div>
 
+        <div className="hero-tag">{t('hero_tag')}</div>
+
         <div className="hero-body">
-          <div className="hero-tag">{t('hero_tag')}</div>
-          {/* Estructura ÚNICA de 4 renglones para ambos idiomas. 100% simétrico. */}
           <h1 className="hero-title">
             {t('hero_title_1')}<br />
             <em>{t('hero_title_italic')}</em> {t('hero_title_for')}<br />
             {t('hero_title_2')}<br />
             {t('hero_title_3')}
           </h1>
-          
           <p className="hero-desc">{t('hero_desc')}</p>
-          
           <div className="hero-actions">
             <a href="#contact" className="btn-primary">{t('btn_explorar')}</a>
             <a href="#gallery" className="btn-ghost">{t('btn_ver_servicios')}</a>
