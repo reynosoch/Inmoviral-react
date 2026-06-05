@@ -99,29 +99,20 @@ function App() {
         <div className="hero-overlay"></div>
 
         <div className="hero-body">
-          {/* Al estar aquí adentro, el CSS lo empuja abajo y lo alinea perfecto con la "P" de Propiedades */}
           <div className="hero-tag">{t('hero_tag')}</div>
-
-          {/* Condicionamos los saltos de línea para que las cajas tipográficas queden idénticas */}
-          {i18n.language === 'es' ? (
-            <h1 className="hero-title">
-              {t('hero_title_1')}<br />
-              <em>{t('hero_title_italic')}</em><br />
-              {t('hero_title_2')}
-            </h1>
-          ) : (
-            <h1 className="hero-title">
-              {t('hero_title_1')}<br />
-              <em>{t('hero_title_italic')}</em> for<br />
-              {t('hero_title_2')}
-            </h1>
-          )}
+          {/* Estructura ÚNICA de 4 renglones para ambos idiomas. 100% simétrico. */}
+          <h1 className="hero-title">
+            {t('hero_title_1')}<br />
+            <em>{t('hero_title_italic')}</em> {t('hero_title_for')}<br />
+            {t('hero_title_2')}<br />
+            {t('hero_title_3')}
+          </h1>
           
           <p className="hero-desc">{t('hero_desc')}</p>
           
           <div className="hero-actions">
-            <a href="#gallery" className="btn-primary">{t('btn_explorar')}</a>
-            <a href="#projects" className="btn-ghost">{t('btn_ver_servicios')}</a>
+            <a href="#contact" className="btn-primary">{t('btn_explorar')}</a>
+            <a href="#gallery" className="btn-ghost">{t('btn_ver_servicios')}</a>
           </div>
         </div>
 
