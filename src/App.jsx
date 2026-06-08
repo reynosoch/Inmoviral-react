@@ -5,16 +5,11 @@ import './App.css';
 
 function App() {
   const { t, i18n } = useTranslation();
-  const [vista, setVista] = useState('home'); // 'home' | 'login'
+  const [vista, setVista] = useState('home');
 
   const cambiarIdioma = (idioma) => {
     i18n.changeLanguage(idioma);
   };
-
-  // Si estamos en login, renderizamos solo esa vista
-  if (vista === 'login') {
-    return <LoginPage onVolver={() => setVista('home')} />;
-  }
 
   useEffect(() => {
     const cursor = document.getElementById('cursor');
@@ -47,19 +42,12 @@ function App() {
     });
 
     const nav = document.getElementById('nav');
-    const handleScroll = () => { 
-      if(nav) nav.classList.toggle('scrolled', window.scrollY > 60); 
-    };
+    const handleScroll = () => { if(nav) nav.classList.toggle('scrolled', window.scrollY > 60); };
     window.addEventListener('scroll', handleScroll);
 
     const reveals = document.querySelectorAll('.reveal');
     const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { 
-        if(e.isIntersecting) { 
-          e.target.classList.add('visible'); 
-          obs.unobserve(e.target); 
-        } 
-      });
+      entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
     }, { threshold: 0.12 });
     reveals.forEach(el => obs.observe(el));
 
