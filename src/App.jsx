@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import LoginPage from './Componentes/LoginPage.jsx';
 import { useTranslation } from 'react-i18next';
 import './App.css';
-import LoginPage from './Componentes/LoginPage.jsx';
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -82,6 +82,8 @@ function App() {
       {/* ══ NAV ══ */}
       <nav id="nav">
         <a href="#" className="logo">INMOVIRAL</a>
+                <button onClick={() => setVista('login')} className="nav-cta">SIGN IN</button>
+
         <ul className="nav-links">
           <li><a href="#about">{t('nav_1')}</a></li>
           <li><a href="#gallery">{t('nav_2')}</a></li>
@@ -94,12 +96,14 @@ function App() {
             <button onClick={() => cambiarIdioma('es')} style={{ background: i18n.language === 'es' ? '#A07840' : 'transparent', color: 'white', border: '1px solid #A07840', padding: '6px 12px', cursor: 'pointer', fontSize: '11px', letterSpacing: '0.1em' }}>ES</button>
             <button onClick={() => cambiarIdioma('en')} style={{ background: i18n.language === 'en' ? '#A07840' : 'transparent', color: 'white', border: '1px solid #A07840', padding: '6px 12px', cursor: 'pointer', fontSize: '11px', letterSpacing: '0.1em' }}>EN</button>
           </div>
-          <button onClick={() => setVista('login')} className="nav-cta">{t('nav_btn')}</button>
+          <button onClick={() => setVista('login')} className="nav-cta" style={{ border: 'none', cursor: 'pointer' }}>{t('nav_btn')}</button>
         </div>
       </nav>
 
       {/* ══ HERO ══ */}
       <section className="hero">
+                <h1 className="hero-title">{t('hero_title_1')}</h1>
+
         <div className="hero-bg">
           <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1800&q=85&auto=format&fit=crop" alt="Premium Real Estate" loading="eager" />
         </div>
