@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../supabaseClient';
 
@@ -10,11 +10,18 @@ export default function LoginPage({ onVolver }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [modo, setModo] = useState('login'); // 'login' | 'register'
+  const [modo, setModo] = useState('login');
+  const [isWide, setIsWide] = useState(window.innerWidth > 1024);
+
+  useEffect(() => {
+    const handleResize = () => setIsWide(window.innerWidth > 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const isES = i18n.language === 'es';
 
-  // Sincronización limpia con tu i18n.js nativo para evitar pantallas en blanco
+  // Sincronización limpia con tu traductor nativo
   const txt = {
     welcome:    isES ? 'BIENVENIDO DE NUEVO' : 'WELCOME BACK',
     title:      isES ? 'Inicia sesión' : 'Sign in',
@@ -31,7 +38,7 @@ export default function LoginPage({ onVolver }) {
     register:   isES ? 'Regístrate' : 'Register',
     login:      isES ? 'Inicia sesión' : 'Sign in',
     guest:      isES ? 'Continuar como invitado' : 'Continue as guest',
-    caption:    isES ? '"Una selección curada de propiedades residenciales y de inversión para quienes valoran la exclusividad."' : '"A curated selection of residential and investment properties for those who value exclusivity."',
+    caption:    isES ? '"Una selección curada de propiedades residenciales y de inversión para quienes valoran la exclusividad."' : '"A curated collection of residential and investment properties for those who value exclusivity."',
     captionLbl: isES ? 'BIENES RAÍCES PREMIUM' : 'PREMIUM REAL ESTATE',
   };
 
@@ -63,8 +70,8 @@ export default function LoginPage({ onVolver }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', background: '#0F0D0A', color: '#FDFBF8', margin: 0, padding: 0, boxSizing: 'border-box' }}>
       
-      {/* ─── LADO IZQUIERDO: Imagen de Respaldo Estilo Hero ─── */}
-      <div style={{ flex: '1', position: 'relative', overflow: 'hidden', background: '#1C1812', display: window.innerWidth > 1024 ? 'block' : 'none' }}>
+      {/* ─── LADO IZQUIERDO: Panel de Imagen Decorativo (Oculto en móviles) ─── */}
+      <div style={{ flex: '1', position: 'relative', overflow: 'hidden', background: '#1C1812', display: isWide ? 'block' : 'none' }}>
         <img 
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.55 }} 
           src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80" 
@@ -75,7 +82,8 @@ export default function LoginPage({ onVolver }) {
           INMOVIRAL
         </span>
         <div style={{ position: 'absolute', bottom: 64, left: 48, right: 48, zIndex: 2 }}>
-          <div style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#C49A58', marginBottom: 16, display: 'flex', alignキャンペーンItems: 'center', gap: 12 }}>
+          {/* Corregido el alignContent/alignItems para evitar crasheos de CSS */}
+          <div style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#C49A58', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ width: 30, height: 1, background: '#C49A58', display: 'inline-block' }}></span>
             {txt.captionLbl}
           </div>
@@ -85,11 +93,11 @@ export default function LoginPage({ onVolver }) {
         </div>
       </div>
 
-      {/* ─── LADO DERECHO: Formulario de Login Limpio y Cuadrado ─── */}
+      {/* ─── LADO DERECHO: Formulario de Autenticación ─── */}
       <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '48px 60px', background: '#0F0D0A' }}>
         <div style={{ width: '100%', maxWidth: 400, margin: '0 auto' }}>
 
-          {/* Cambiador de Idioma */}
+          {/* Selector de Idiomas */}
           <div style={{ display: 'flex', gap: 6, marginBottom: 32 }}>
             {['es', 'en'].map(lng => (
               <button key={lng} onClick={() => i18n.changeLanguage(lng)}

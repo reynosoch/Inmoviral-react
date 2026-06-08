@@ -105,6 +105,11 @@ nav.scrolled {
   padding: 10px 22px;
   text-decoration: none;
   transition: all 0.3s;
+  /* Para que funcione igual como <button> y como <a> */
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-block;
 }
 .nav-cta:hover {
   background: var(--gold);
