@@ -1,13 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import './App.css';
+import LoginPage from './Componentes/LoginPage.jsx';
 
 function App() {
   const { t, i18n } = useTranslation();
+  const [vista, setVista] = useState('home'); // 'home' | 'login'
 
   const cambiarIdioma = (idioma) => {
     i18n.changeLanguage(idioma);
   };
+
+  // Si estamos en login, renderizamos solo esa vista
+  if (vista === 'login') {
+    return <LoginPage onVolver={() => setVista('home')} />;
+  }
 
   useEffect(() => {
     const cursor = document.getElementById('cursor');
@@ -87,7 +94,7 @@ function App() {
             <button onClick={() => cambiarIdioma('es')} style={{ background: i18n.language === 'es' ? '#A07840' : 'transparent', color: 'white', border: '1px solid #A07840', padding: '6px 12px', cursor: 'pointer', fontSize: '11px', letterSpacing: '0.1em' }}>ES</button>
             <button onClick={() => cambiarIdioma('en')} style={{ background: i18n.language === 'en' ? '#A07840' : 'transparent', color: 'white', border: '1px solid #A07840', padding: '6px 12px', cursor: 'pointer', fontSize: '11px', letterSpacing: '0.1em' }}>EN</button>
           </div>
-          <a href="#contact" className="nav-cta">{t('nav_btn')}</a>
+          <button onClick={() => setVista('login')} className="nav-cta">{t('nav_btn')}</button>
         </div>
       </nav>
 
@@ -98,9 +105,8 @@ function App() {
         </div>
         <div className="hero-overlay"></div>
 
-        <div className="hero-tag">{t('hero_tag')}</div>
-
         <div className="hero-body">
+          <div className="hero-tag">{t('hero_tag')}</div>
           <h1 className="hero-title">
             {t('hero_title_1')}<br />
             <em>{t('hero_title_italic')}</em> {t('hero_title_for')}<br />
