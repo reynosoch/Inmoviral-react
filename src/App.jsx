@@ -5,7 +5,7 @@ import './App.css';
 
 function App() {
   const { t, i18n } = useTranslation();
-  const [vista, setVista] = useState('home');
+  const [vista, setVista] = useState('home'); // 'home' | 'login'
 
   const cambiarIdioma = (idioma) => {
     i18n.changeLanguage(idioma);
@@ -42,12 +42,19 @@ function App() {
     });
 
     const nav = document.getElementById('nav');
-    const handleScroll = () => { if(nav) nav.classList.toggle('scrolled', window.scrollY > 60); };
+    const handleScroll = () => { 
+      if(nav) nav.classList.toggle('scrolled', window.scrollY > 60); 
+    };
     window.addEventListener('scroll', handleScroll);
 
     const reveals = document.querySelectorAll('.reveal');
     const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+      entries.forEach(e => { 
+        if(e.isIntersecting) { 
+          e.target.classList.add('visible'); 
+          obs.unobserve(e.target); 
+        } 
+      });
     }, { threshold: 0.12 });
     reveals.forEach(el => obs.observe(el));
 
@@ -62,21 +69,19 @@ function App() {
     };
   }, []);
 
+  // RENDER CONDICIONAL DESPUÉS DE LOS HOOKS (Esto cura el error de la consola)
+  if (vista === 'login') {
+    return <LoginPage onVolver={() => setVista('home')} />;
+  }
+
   return (
     <>
       <div className="cursor" id="cursor"></div>
       <div className="cursor-ring" id="cursorRing"></div>
 
-      {/* ══ LOGIN PAGE ══ */}
-      {vista === 'login' && <LoginPage onVolver={() => setVista('home')} />}
-
-      {/* ══ HOME (hidden when login is shown) ══ */}
-      {vista !== 'login' && (<>
-
       {/* ══ NAV ══ */}
       <nav id="nav">
         <a href="#" className="logo">INMOVIRAL</a>
-
         <ul className="nav-links">
           <li><a href="#about">{t('nav_1')}</a></li>
           <li><a href="#gallery">{t('nav_2')}</a></li>
@@ -172,7 +177,7 @@ function App() {
             <span className="feature-num">03</span>
             <div className="feature-icon-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke="#A07840" strokeWidth="1.2" strokeLinecap="round">
-                <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
               </svg>
             </div>
             <h3 className="feature-title">{t('f3_title_1')}<br />{t('f3_title_2')}</h3>
@@ -182,7 +187,7 @@ function App() {
             <span className="feature-num">04</span>
             <div className="feature-icon-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke="#A07840" strokeWidth="1.2" strokeLinecap="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
               </svg>
             </div>
             <h3 className="feature-title">{t('f4_title_1')}<br />{t('f4_title_2')}</h3>
@@ -198,48 +203,48 @@ function App() {
             <div className="section-label">{t('gal_label')}</div>
             <h2 className="section-title">{t('gal_title_1')}<br />{t('gal_title_2')}<br />{t('gal_title_3')}</h2>
           </div>
-          <a href="#" className="btn-sm">{t('gal_view_all')}</a>
+          <a href="#" className="view-all">{t('gal_view_all')}</a>
         </div>
-        <div className="gal-grid">
-          {[
-            { key: 'g_t1', img: 'photo-1600585154340-be6161a56a0c' },
-            { key: 'g_t2', img: 'photo-1560448204-e02f11c3d0e2' },
-            { key: 'g_t3', img: 'photo-1512917774080-9991f1c4c750' },
-            { key: 'g_t4', img: 'photo-1600047509807-ba8f99d2cdde' },
-            { key: 'g_t5', img: 'photo-1500382017468-9049fed747ef' },
-            { key: 'g_t6', img: 'photo-1486406146926-c627a92ad1ab' },
-            { key: 'g_t7', img: 'photo-1464146072230-91cabc968266' },
-            { key: 'g_t8', img: 'photo-1582407947304-fd86f028f716' },
-          ].map(({ key, img }, i) => (
-            <div key={key} className={`gal reveal${i % 3 === 1 ? ' reveal-delay-1' : i % 3 === 2 ? ' reveal-delay-2' : ''}`}>
-              <img src={`https://images.unsplash.com/${img}?w=600&q=75&auto=format&fit=crop`} alt={t(key)} loading="lazy" />
-              <div className="gal-overlay"><span>{t(key)}</span></div>
-            </div>
-          ))}
+        <div className="gallery-grid">
+          <div className="gal reveal"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80&auto=format&fit=crop" alt="Luxury Home 1" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t1')}</span></div>
+          <div className="gal reveal reveal-delay-1"><img src="https://images.unsplash.com/photo-1503174971373-b1f69850bded?w=600&q=80&auto=format&fit=crop" alt="Premium Apartment" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t2')}</span></div>
+          <div className="gal reveal reveal-delay-2"><img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80&auto=format&fit=crop" alt="Waterfront Estate" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t3')}</span></div>
+          <div className="gal reveal reveal-delay-3"><img src="https://images.unsplash.com/photo-1565372195458-9de0b320ef04?w=600&q=80&auto=format&fit=crop" alt="Investment Property" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t4')}</span></div>
+          <div className="gal reveal"><img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=600&q=80&auto=format&fit=crop" alt="Development Land" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t5')}</span></div>
+          <div className="gal reveal reveal-delay-1"><img src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=600&q=80&auto=format&fit=crop" alt="Commercial Asset" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t6')}</span></div>
+          <div className="gal reveal reveal-delay-2"><img src="https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=600&q=80&auto=format&fit=crop" alt="Prime Land Parcel" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t7')}</span></div>
+          <div className="gal reveal reveal-delay-3"><img src="https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600&q=80&auto=format&fit=crop" alt="Penthouse" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t8')}</span></div>
         </div>
       </section>
 
       {/* ══ ABOUT ══ */}
       <section className="about" id="about">
-        <div className="about-img reveal">
-          <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80&auto=format&fit=crop" alt="About INMOVIRAL" loading="lazy" />
-        </div>
-        <div className="about-body reveal reveal-delay-1">
-          <div className="section-label">{t('about_label')}</div>
-          <h2 className="section-title">{t('about_title_1')}<br /><em>{t('about_title_2')}</em><br />{t('about_title_3')}</h2>
-          <p className="about-text">{t('about_desc_1')}</p>
-          <p className="about-text">{t('about_desc_2')}</p>
-          <a href="#" className="btn-sm" style={{ marginTop: '24px' }}>{t('about_btn_more')}</a>
-          <div className="about-stats">
-            <div className="astat"><span className="astat-num">{t('as1_num')}<span className="astat-unit">{t('as1_unit')}</span></span><p className="astat-label">{t('as1_label')}</p></div>
-            <div className="astat"><span className="astat-num">{t('as2_num')}<span className="astat-unit">{t('as2_unit')}</span></span><p className="astat-label">{t('as2_label')}</p></div>
-            <div className="astat"><span className="astat-num">{t('as3_num')}<span className="astat-unit">{t('as3_unit')}</span></span><p className="astat-label">{t('as3_label')}</p></div>
+        <div className="about-inner">
+          <div>
+            <div className="about-label reveal">{t('about_label')}</div>
+            <h2 className="about-title reveal">{t('about_title_1')}<br />{t('about_title_2')}<br />{t('about_title_3')}</h2>
+            <p className="about-text reveal">{t('about_desc_1')}<br /><br />{t('about_desc_2')}</p>
+            <a href="#" className="btn-outline-light reveal">{t('about_btn_more')}</a>
+          </div>
+          <div className="about-stats reveal">
+            <div className="stat-box">
+              <span className="stat-num">{t('as1_num')}<span className="stat-unit">{t('as1_unit')}</span></span>
+              <span className="stat-label">{t('as1_label')}</span>
+            </div>
+            <div className="stat-box">
+              <span className="stat-num">{t('as2_num')}<span className="stat-unit">{t('as2_unit')}</span></span>
+              <span className="stat-label">{t('as2_label')}</span>
+            </div>
+            <div className="stat-box">
+              <span className="stat-num">{t('as3_num')}<span className="stat-unit">{t('as3_unit')}</span></span>
+              <span className="stat-label">{t('as3_label')}</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ══ PILLARS / PRODUCTS ══ */}
-      <section className="pillars" id="projects">
+      {/* ══ PRODUCTS ══ */}
+      <section className="products" id="projects">
         <div className="section-header reveal">
           <div>
             <div className="section-label">{t('pilars_label')}</div>
@@ -285,11 +290,31 @@ function App() {
           </div>
         </div>
         <div className="process-steps">
-          <div className="step reveal"><div className="step-num-wrap"><span className="step-num">01</span></div><h4 className="step-title">{t('step1_title')}</h4><p className="step-text">{t('step1_desc')}</p></div>
-          <div className="step reveal reveal-delay-1"><div className="step-num-wrap"><span className="step-num">02</span></div><h4 className="step-title">{t('step2_title')}</h4><p className="step-text">{t('step2_desc')}</p></div>
-          <div className="step reveal reveal-delay-2"><div className="step-num-wrap"><span className="step-num">03</span></div><h4 className="step-title">{t('step3_title')}</h4><p className="step-text">{t('step3_desc')}</p></div>
-          <div className="step reveal reveal-delay-3"><div className="step-num-wrap"><span className="step-num">04</span></div><h4 className="step-title">{t('step4_title')}</h4><p className="step-text">{t('step4_desc')}</p></div>
-          <div className="step reveal reveal-delay-4"><div className="step-num-wrap"><span className="step-num">05</span></div><h4 className="step-title">{t('step5_title')}</h4><p className="step-text">{t('step5_desc')}</p></div>
+          <div className="step reveal">
+            <div className="step-num-wrap"><span className="step-num">01</span></div>
+            <h4 className="step-title">{t('step1_title')}</h4>
+            <p className="step-text">{t('step1_desc')}</p>
+          </div>
+          <div className="step reveal reveal-delay-1">
+            <div className="step-num-wrap"><span className="step-num">02</span></div>
+            <h4 className="step-title">{t('step2_title')}</h4>
+            <p className="step-text">{t('step2_desc')}</p>
+          </div>
+          <div className="step reveal reveal-delay-2">
+            <div className="step-num-wrap"><span className="step-num">03</span></div>
+            <h4 className="step-title">{t('step3_title')}</h4>
+            <p className="step-text">{t('step3_desc')}</p>
+          </div>
+          <div className="step reveal reveal-delay-3">
+            <div className="step-num-wrap"><span className="step-num">04</span></div>
+            <h4 className="step-title">{t('step4_title')}</h4>
+            <p className="step-text">{t('step4_desc')}</p>
+          </div>
+          <div className="step reveal reveal-delay-4">
+            <div className="step-num-wrap"><span className="step-num">05</span></div>
+            <h4 className="step-title">{t('step5_title')}</h4>
+            <p className="step-text">{t('step5_desc')}</p>
+          </div>
         </div>
       </section>
 
@@ -393,7 +418,6 @@ function App() {
           </div>
         </div>
       </footer>
-      </>)}
     </>
   );
 }
