@@ -4,12 +4,12 @@ import { supabase } from '../supabaseClient';
 import './LoginPage.css';
 
 export default function LoginPage({ onVolver }) {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null); // { type: 'error'|'success', text: '' }
+  const [message, setMessage] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,17 +44,11 @@ export default function LoginPage({ onVolver }) {
 
   return (
     <main className="login-wrapper">
-      {/* Selector de idioma */}
-      <div className="lang-switcher">
-        <button className={`lang-btn${i18n.language === 'es' ? ' active' : ''}`} onClick={() => i18n.changeLanguage('es')}>ES</button>
-        <button className={`lang-btn${i18n.language === 'en' ? ' active' : ''}`} onClick={() => i18n.changeLanguage('en')}>EN</button>
-      </div>
-
       {/* Lado imagen */}
       <aside className="image-side">
         <img src="https://images.pexels.com/photos/773842/pexels-photo-773842.jpeg" alt="Premium luxury building" />
         <div className="image-overlay"></div>
-        <a className="brand" onClick={onVolver} style={{ cursor: 'pointer' }}>INMOVIRAL</a>
+        <a className="brand" onClick={onVolver}>INMOVIRAL</a>
         <div className="image-caption">
           <div className="label">Premium Real Estate</div>
           <blockquote>"Una colección curada de propiedades excepcionales para quienes valoran la exclusividad."</blockquote>
@@ -63,6 +57,11 @@ export default function LoginPage({ onVolver }) {
 
       {/* Lado formulario */}
       <section className="form-side">
+        <div className="lang-switcher">
+          <button className={`lang-btn${i18n.language === 'es' ? ' active' : ''}`} onClick={() => i18n.changeLanguage('es')}>ES</button>
+          <button className={`lang-btn${i18n.language === 'en' ? ' active' : ''}`} onClick={() => i18n.changeLanguage('en')}>EN</button>
+        </div>
+
         <div className="form-inner">
           <div className="overline">Bienvenido de nuevo</div>
           <h1 className="title">Inicia sesión</h1>
@@ -136,8 +135,8 @@ export default function LoginPage({ onVolver }) {
           <p className="footer-link">
             ¿No tienes una cuenta? <a href="#">Regístrate</a>
           </p>
-          <p className="footer-link" style={{ marginTop: '12px' }}>
-            <a onClick={onVolver} style={{ cursor: 'pointer' }}>← Continuar como invitado</a>
+          <p className="footer-link" style={{ marginTop: '8px' }}>
+            ¿Prefieres continuar sin registrarte? <a onClick={onVolver}>Continuar como invitado</a>
           </p>
         </div>
       </section>

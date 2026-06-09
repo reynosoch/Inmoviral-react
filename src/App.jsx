@@ -62,15 +62,16 @@ function App() {
     };
   }, []);
 
-  // Mostrar Login si el usuario hizo clic en Sign In
-  if (vista === 'login') {
-    return <LoginPage onVolver={() => setVista('home')} />;
-  }
-
   return (
     <>
       <div className="cursor" id="cursor"></div>
       <div className="cursor-ring" id="cursorRing"></div>
+
+      {/* ══ LOGIN PAGE ══ */}
+      {vista === 'login' && <LoginPage onVolver={() => setVista('home')} />}
+
+      {/* ══ HOME (hidden when login is shown) ══ */}
+      {vista !== 'login' && (<>
 
       {/* ══ NAV ══ */}
       <nav id="nav">
@@ -392,6 +393,7 @@ function App() {
           </div>
         </div>
       </footer>
+      </>)}
     </>
   );
 }
