@@ -3,6 +3,22 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../supabaseClient';
 import './LoginPage.css';
 
+// Ejemplo de función que puedes usar en el catálogo para traer las casas desde la Base de Datos
+import { supabase } from '../supabaseClient';
+
+export async function obtenerPropiedades() {
+  const { data, error } = await supabase
+    .from('propiedades')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error al obtener propiedades:', error);
+    return [];
+  }
+  return data; // Retorna el arreglo de casas con sus URLs de imágenes listas para renderizar
+}
+
 export default function LoginPage({ onVolver }) {
   const { t, i18n } = useTranslation();
   
@@ -41,8 +57,8 @@ export default function LoginPage({ onVolver }) {
           throw new Error(i18n.language.startsWith('es') ? 'Debes aceptar los términos y condiciones.' : 'You must accept the terms and conditions.');
         }
 
-        // Registro en Supabase pasando los metadatos adicionales del formulario
-        const { error: err } = await supabase.auth.signUp({
+        // Registro en Supabase pasando los metadatos del formulario para guardarlos en auth.users
+        const { data: signUpData, error: err } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -54,7 +70,14 @@ export default function LoginPage({ onVolver }) {
           }
         });
         if (err) throw err;
-        setSuccess(t('register_success_msg', { defaultValue: '¡Cuenta creada! Revisa tu correo para confirmar.' }));
+
+        // Validar si requiere confirmación por correo electrónico o inicia directo
+        if (signUpData?.user && signUpData.session === null) {
+          setSuccess(t('register_success_confirm', { defaultValue: '¡Cuenta creada! Revisa tu correo electrónico para confirmar tu cuenta.' }));
+        } else {
+          setSuccess(t('register_success_msg', { defaultValue: '¡Cuenta creada e inicio de sesión exitoso!' }));
+          setTimeout(() => onVolver(), 1200);
+        }
       }
     } catch (err) {
       setError(err.message);
