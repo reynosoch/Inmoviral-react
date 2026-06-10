@@ -1,84 +1,116 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import LoginPage from './Componentes/LoginPage.jsx';
 import { useTranslation } from 'react-i18next';
 import './App.css';
 
 function App() {
   const { t, i18n } = useTranslation();
-  const [vista, setVista] = useState('home'); // 'home' | 'login'
+  const [vista, setVista] = useState('home');
+  const rafRef = useRef(null);
 
-  const cambiarIdioma = (idioma) => {
-    i18n.changeLanguage(idioma);
-  };
+  const cambiarIdioma = (idioma) => i18n.changeLanguage(idioma);
 
+  // ══ 1. CURSOR INTERACTIVO — Efecto aislado independiente (Evita el parpadeo) ══
   useEffect(() => {
-    const cursor = document.getElementById('cursor');
-    const ring = document.getElementById('cursorRing');
+    // Los nodos del cursor se inyectan directamente al body para que no mueran al cambiar de vista
+    const cursor = document.createElement('div');
+    cursor.className = 'cursor';
+    cursor.id = 'appCursor';
+    document.body.appendChild(cursor);
+
+    const ring = document.createElement('div');
+    ring.className = 'cursor-ring';
+    ring.id = 'appCursorRing';
+    document.body.appendChild(ring);
+
     let mx = 0, my = 0, rx = 0, ry = 0;
-    
-    const moveCursor = (e) => { 
-      mx = e.clientX; 
+    const onMove = (e) => {
+      mx = e.clientX;
       my = e.clientY;
-      if(cursor) { cursor.style.left = mx + 'px'; cursor.style.top = my + 'px'; }
+      cursor.style.left = mx + 'px';
+      cursor.style.top  = my + 'px';
     };
-    document.addEventListener('mousemove', moveCursor);
+    document.addEventListener('mousemove', onMove);
 
-    let animationFrame;
-    const animRing = () => {
-      rx += (mx - rx) * 0.12; 
+    const tick = () => {
+      rx += (mx - rx) * 0.12;
       ry += (my - ry) * 0.12;
-      if(ring) { ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; }
-      animationFrame = requestAnimationFrame(animRing);
+      ring.style.left = rx + 'px';
+      ring.style.top  = ry + 'px';
+      rafRef.current = requestAnimationFrame(tick);
     };
-    animRing();
-
-    const elements = document.querySelectorAll('a, button, .gal, .feature-item');
-    const handleMouseEnter = () => { if(ring) { ring.style.transform = 'translate(-50%,-50%) scale(1.8)'; ring.style.borderColor = 'rgba(160,120,64,0.8)'; }};
-    const handleMouseLeave = () => { if(ring) { ring.style.transform = 'translate(-50%,-50%) scale(1)'; ring.style.borderColor = 'rgba(160,120,64,0.5)'; }};
-
-    elements.forEach(el => {
-      el.addEventListener('mouseenter', handleMouseEnter);
-      el.addEventListener('mouseleave', handleMouseLeave);
-    });
-
-    const nav = document.getElementById('nav');
-    const handleScroll = () => { 
-      if(nav) nav.classList.toggle('scrolled', window.scrollY > 60); 
-    };
-    window.addEventListener('scroll', handleScroll);
-
-    const reveals = document.querySelectorAll('.reveal');
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { 
-        if(e.isIntersecting) { 
-          e.target.classList.add('visible'); 
-          obs.unobserve(e.target); 
-        } 
-      });
-    }, { threshold: 0.12 });
-    reveals.forEach(el => obs.observe(el));
+    rafRef.current = requestAnimationFrame(tick);
 
     return () => {
-      document.removeEventListener('mousemove', moveCursor);
-      window.removeEventListener('scroll', handleScroll);
-      cancelAnimationFrame(animationFrame);
-      elements.forEach(el => {
-        el.removeEventListener('mouseenter', handleMouseEnter);
-        el.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('mousemove', onMove);
+      cancelAnimationFrame(rafRef.current);
+      cursor.remove();
+      ring.remove();
+    };
+  }, []); // Array vacío: Solo se monta una vez y no parpadea jamás
+
+  // ══ 2. HOVER DEL CURSOR — Re-vincula los eventos cuando el DOM de la vista cambia ══
+  useEffect(() => {
+    const ring = document.getElementById('appCursorRing');
+    if (!ring) return;
+
+    const onEnter = () => {
+      ring.style.transform   = 'translate(-50%,-50%) scale(1.8)';
+      ring.style.borderColor = 'rgba(160,120,64,0.8)';
+    };
+    const onLeave = () => {
+      ring.style.transform   = 'translate(-50%,-50%) scale(1)';
+      ring.style.borderColor = 'rgba(160,120,64,0.5)';
+    };
+
+    const timer = setTimeout(() => {
+      const els = document.querySelectorAll('a, button, .gal, .feature-item');
+      els.forEach(el => {
+        el.addEventListener('mouseenter', onEnter);
+        el.addEventListener('mouseleave', onLeave);
+      });
+    }, 60);
+
+    return () => {
+      clearTimeout(timer);
+      document.querySelectorAll('a, button, .gal, .feature-item').forEach(el => {
+        el.removeEventListener('mouseenter', onEnter);
+        el.removeEventListener('mouseleave', onLeave);
       });
     };
-  }, []);
+  }, [vista]);
 
-  // RENDER CONDICIONAL DESPUÉS DE LOS HOOKS (Esto cura el error de la consola)
+  // ══ 3. SCROLL NAV + ANIMACIONES REVEAL (Solo actúan en la Home) ══
+  useEffect(() => {
+    if (vista !== 'home') return;
+    const nav = document.getElementById('nav');
+    const onScroll = () => nav && nav.classList.toggle('scrolled', window.scrollY > 60);
+    window.addEventListener('scroll', onScroll);
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+
+    const timer = setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    }, 50);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      obs.disconnect();
+      clearTimeout(timer);
+    };
+  }, [vista]);
+
+  // ══ INTERCAMBIO DE VISTAS ══
   if (vista === 'login') {
     return <LoginPage onVolver={() => setVista('home')} />;
   }
 
   return (
     <>
-      <div className="cursor" id="cursor"></div>
-      <div className="cursor-ring" id="cursorRing"></div>
-
       {/* ══ NAV ══ */}
       <nav id="nav">
         <a href="#" className="logo">INMOVIRAL</a>
@@ -88,13 +120,30 @@ function App() {
           <li><a href="#projects">{t('nav_3')}</a></li>
           <li><a href="#contact">{t('nav_4')}</a></li>
         </ul>
-
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '5px' }}>
-            <button onClick={() => cambiarIdioma('es')} style={{ background: i18n.language === 'es' ? '#A07840' : 'transparent', color: 'white', border: '1px solid #A07840', padding: '6px 12px', cursor: 'pointer', fontSize: '11px', letterSpacing: '0.1em' }}>ES</button>
-            <button onClick={() => cambiarIdioma('en')} style={{ background: i18n.language === 'en' ? '#A07840' : 'transparent', color: 'white', border: '1px solid #A07840', padding: '6px 12px', cursor: 'pointer', fontSize: '11px', letterSpacing: '0.1em' }}>EN</button>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div style={{ display: 'flex' }}>
+            <button
+              onClick={() => cambiarIdioma('es')}
+              style={{
+                background: i18n.language === 'es' ? '#A07840' : 'transparent',
+                color: 'white', border: '1px solid rgba(160,120,64,0.4)',
+                padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em',
+                fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer',
+              }}
+            >ES</button>
+            <button
+              onClick={() => cambiarIdioma('en')}
+              style={{
+                background: i18n.language === 'en' ? '#A07840' : 'transparent',
+                color: 'white', border: '1px solid rgba(160,120,64,0.4)',
+                padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em',
+                fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer',
+              }}
+            >EN</button>
           </div>
-          <button onClick={() => setVista('login')} className="nav-cta" style={{ border: 'none', cursor: 'pointer' }}>{t('nav_btn')}</button>
+          <button onClick={() => setVista('login')} className="nav-cta" style={{ border: 'none', cursor: 'pointer' }}>
+            {t('nav_btn')}
+          </button>
         </div>
       </nav>
 
@@ -104,7 +153,6 @@ function App() {
           <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1800&q=85&auto=format&fit=crop" alt="Premium Real Estate" loading="eager" />
         </div>
         <div className="hero-overlay"></div>
-
         <div className="hero-body">
           <div className="hero-tag">{t('hero_tag')}</div>
           <h1 className="hero-title">
@@ -119,13 +167,11 @@ function App() {
             <a href="#gallery" className="btn-ghost">{t('btn_ver_servicios')}</a>
           </div>
         </div>
-
         <div className="hero-counter">
           <div className="hc-item"><span className="hc-num">{t('hc1_num')}</span><span className="hc-label">{t('hc1_label')}</span></div>
           <div className="hc-item"><span className="hc-num">{t('hc2_num')}</span><span className="hc-label">{t('hc2_label')}</span></div>
           <div className="hc-item"><span className="hc-num">{t('hc3_num')}</span><span className="hc-label">{t('hc3_label')}</span></div>
         </div>
-
         <div className="hero-scroll">
           <div className="scroll-line"></div>
           <span>Scroll</span>
@@ -135,18 +181,10 @@ function App() {
       {/* ══ TICKER ══ */}
       <div className="ticker-bar">
         <div className="ticker-inner">
-          <span className="ticker-item">{t('ticker_1')}</span>
-          <span className="ticker-item">{t('ticker_2')}</span>
-          <span className="ticker-item">{t('ticker_3')}</span>
-          <span className="ticker-item">{t('ticker_4')}</span>
-          <span className="ticker-item">{t('ticker_5')}</span>
-          <span className="ticker-item">{t('ticker_6')}</span>
-          <span className="ticker-item">{t('ticker_7')}</span>
-          <span className="ticker-item">{t('ticker_8')}</span>
-          <span className="ticker-item">{t('ticker_9')}</span>
-          <span className="ticker-item">{t('ticker_10')}</span>
-          <span className="ticker-item">{t('ticker_11')}</span>
-          <span className="ticker-item">{t('ticker_12')}</span>
+          {[...Array(2)].flatMap((_, pass) =>
+            ['ticker_1','ticker_2','ticker_3','ticker_4','ticker_5','ticker_6',             'ticker_7','ticker_8','ticker_9','ticker_10','ticker_11','ticker_12']
+              .map((key, i) => <span key={`${pass}-${i}`} className="ticker-item">{t(key)}</span>)
+          )}
         </div>
       </div>
 
@@ -167,7 +205,10 @@ function App() {
             <span className="feature-num">02</span>
             <div className="feature-icon-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke="#A07840" strokeWidth="1.2" strokeLinecap="round">
-                <rect x="2" y="6" width="20" height="14" rx="1"/><path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="9.5" y1="13.5" x2="14.5" y2="13.5"/>
+                <rect x="2" y="6" width="20" height="14" rx="1"/>
+                <path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                <line x1="12" y1="11" x2="12" y2="16"/>
+                <line x1="9.5" y1="13.5" x2="14.5" y2="13.5"/>
               </svg>
             </div>
             <h3 className="feature-title">{t('f2_title_1')}<br />{t('f2_title_2')}</h3>
@@ -206,38 +247,50 @@ function App() {
           <a href="#" className="view-all">{t('gal_view_all')}</a>
         </div>
         <div className="gallery-grid">
-          <div className="gal reveal"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80&auto=format&fit=crop" alt="Luxury Home 1" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t1')}</span></div>
-          <div className="gal reveal reveal-delay-1"><img src="https://images.unsplash.com/photo-1503174971373-b1f69850bded?w=600&q=80&auto=format&fit=crop" alt="Premium Apartment" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t2')}</span></div>
-          <div className="gal reveal reveal-delay-2"><img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80&auto=format&fit=crop" alt="Waterfront Estate" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t3')}</span></div>
-          <div className="gal reveal reveal-delay-3"><img src="https://images.unsplash.com/photo-1565372195458-9de0b320ef04?w=600&q=80&auto=format&fit=crop" alt="Investment Property" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t4')}</span></div>
-          <div className="gal reveal"><img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=600&q=80&auto=format&fit=crop" alt="Development Land" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t5')}</span></div>
-          <div className="gal reveal reveal-delay-1"><img src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=600&q=80&auto=format&fit=crop" alt="Commercial Asset" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t6')}</span></div>
-          <div className="gal reveal reveal-delay-2"><img src="https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=600&q=80&auto=format&fit=crop" alt="Prime Land Parcel" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t7')}</span></div>
-          <div className="gal reveal reveal-delay-3"><img src="https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600&q=80&auto=format&fit=crop" alt="Penthouse" loading="lazy" /><div className="gal-overlay"></div><span className="gal-title">{t('g_t8')}</span></div>
+          {[
+            { key: 'g_t1', img: 'photo-1600585154340-be6161a56a0c' },
+            { key: 'g_t2', img: 'photo-1503174971373-b1f69850bded' },
+            { key: 'g_t3', img: 'photo-1600607687939-ce8a6c25118c' },
+            { key: 'g_t4', img: 'photo-1565372195458-9de0b320ef04' },
+            { key: 'g_t5', img: 'photo-1600566753190-17f0baa2a6c3' },
+            { key: 'g_t6', img: 'photo-1600047509807-ba8f99d2cdde' },
+            { key: 'g_t7', img: 'photo-1583608205776-bfd35f0d9f83' },
+            { key: 'g_t8', img: 'photo-1582407947304-fd86f028f716' },
+          ].map(({ key, img }, i) => (
+            <div key={key} className={`gal reveal${i % 3 === 1 ? ' reveal-delay-1' : i % 3 === 2 ? ' reveal-delay-2' : ''}`}>
+              <img src={`https://images.unsplash.com/${img}?w=600&q=75&auto=format&fit=crop`} alt={t(key)} loading="lazy" />
+              <div className="gal-overlay"></div>
+              <span className="gal-title">{t(key)}</span>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* ══ ABOUT ══ */}
       <section className="about" id="about">
         <div className="about-inner">
-          <div>
-            <div className="about-label reveal">{t('about_label')}</div>
-            <h2 className="about-title reveal">{t('about_title_1')}<br />{t('about_title_2')}<br />{t('about_title_3')}</h2>
-            <p className="about-text reveal">{t('about_desc_1')}<br /><br />{t('about_desc_2')}</p>
-            <a href="#" className="btn-outline-light reveal">{t('about_btn_more')}</a>
+          <div className="reveal">
+            <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80&auto=format&fit=crop" alt="About INMOVIRAL" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           </div>
-          <div className="about-stats reveal">
-            <div className="stat-box">
-              <span className="stat-num">{t('as1_num')}<span className="stat-unit">{t('as1_unit')}</span></span>
-              <span className="stat-label">{t('as1_label')}</span>
-            </div>
-            <div className="stat-box">
-              <span className="stat-num">{t('as2_num')}<span className="stat-unit">{t('as2_unit')}</span></span>
-              <span className="stat-label">{t('as2_label')}</span>
-            </div>
-            <div className="stat-box">
-              <span className="stat-num">{t('as3_num')}<span className="stat-unit">{t('as3_unit')}</span></span>
-              <span className="stat-label">{t('as3_label')}</span>
+          <div className="reveal reveal-delay-1">
+            <div className="about-label">{t('about_label')}</div>
+            <h2 className="about-title">{t('about_title_1')}<br /><em>{t('about_title_2')}</em><br />{t('about_title_3')}</h2>
+            <p className="about-text">{t('about_desc_1')}</p>
+            <p className="about-text">{t('about_desc_2')}</p>
+            <a href="#" className="btn-outline-light" style={{ marginBottom: '48px', display: 'inline-flex' }}>{t('about_btn_more')}</a>
+            <div className="about-stats">
+              <div className="stat-box">
+                <span className="stat-num">{t('as1_num')}<span className="stat-unit">{t('as1_unit')}</span></span>
+                <span className="stat-label">{t('as1_label')}</span>
+              </div>
+              <div className="stat-box">
+                <span className="stat-num">{t('as2_num')}<span className="stat-unit">{t('as2_unit')}</span></span>
+                <span className="stat-label">{t('as2_label')}</span>
+              </div>
+              <div className="stat-box">
+                <span className="stat-num">{t('as3_num')}<span className="stat-unit">{t('as3_unit')}</span></span>
+                <span className="stat-label">{t('as3_label')}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -290,31 +343,13 @@ function App() {
           </div>
         </div>
         <div className="process-steps">
-          <div className="step reveal">
-            <div className="step-num-wrap"><span className="step-num">01</span></div>
-            <h4 className="step-title">{t('step1_title')}</h4>
-            <p className="step-text">{t('step1_desc')}</p>
-          </div>
-          <div className="step reveal reveal-delay-1">
-            <div className="step-num-wrap"><span className="step-num">02</span></div>
-            <h4 className="step-title">{t('step2_title')}</h4>
-            <p className="step-text">{t('step2_desc')}</p>
-          </div>
-          <div className="step reveal reveal-delay-2">
-            <div className="step-num-wrap"><span className="step-num">03</span></div>
-            <h4 className="step-title">{t('step3_title')}</h4>
-            <p className="step-text">{t('step3_desc')}</p>
-          </div>
-          <div className="step reveal reveal-delay-3">
-            <div className="step-num-wrap"><span className="step-num">04</span></div>
-            <h4 className="step-title">{t('step4_title')}</h4>
-            <p className="step-text">{t('step4_desc')}</p>
-          </div>
-          <div className="step reveal reveal-delay-4">
-            <div className="step-num-wrap"><span className="step-num">05</span></div>
-            <h4 className="step-title">{t('step5_title')}</h4>
-            <p className="step-text">{t('step5_desc')}</p>
-          </div>
+          {[1,2,3,4,5].map((n, i) => (
+            <div key={n} className={`step reveal${i > 0 ? ` reveal-delay-${i}` : ''}`}>
+              <div className="step-num-wrap"><span className="step-num">0{n}</span></div>
+              <h4 className="step-title">{t(`step${n}_title`)}</h4>
+              <p className="step-text">{t(`step${n}_desc`)}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -327,33 +362,26 @@ function App() {
           </div>
         </div>
         <div className="testi-grid">
-          <div className="testi-card reveal">
-            <span className="testi-quote">"</span>
-            <p className="testi-text">{t('t1_text')}</p>
-            <div className="testi-author">
-              <div className="testi-avatar"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=70&auto=format&fit=crop&crop=face" alt="" loading="lazy" /></div>
-              <div><div className="testi-name">{t('t1_author')}</div><div className="testi-role">{t('t1_role')}</div></div>
-              <div className="testi-stars">★★★★★</div>
+          {[
+            { n: 1, avatar: 'photo-1507003211169-0a1dd7228f2d' },
+            { n: 2, avatar: 'photo-1494790108755-2616b612b786' },
+            { n: 3, avatar: 'photo-1472099645785-5658abf4ff4e' },
+          ].map(({ n, avatar }, i) => (
+            <div key={n} className={`testi-card reveal${i > 0 ? ` reveal-delay-${i}` : ''}`}>
+              <span className="testi-quote">"</span>
+              <p className="testi-text">{t(`t${n}_text`)}</p>
+              <div className="testi-author">
+                <div className="testi-avatar">
+                  <img src={`https://images.unsplash.com/${avatar}?w=80&q=70&auto=format&fit=crop&crop=face`} alt="" loading="lazy" />
+                </div>
+                <div>
+                  <div className="testi-name">{t(`t${n}_author`)}</div>
+                  <div className="testi-role">{t(`t` + n + `_role`)}</div>
+                </div>
+                <div className="testi-stars">★★★★★</div>
+              </div>
             </div>
-          </div>
-          <div className="testi-card reveal reveal-delay-1">
-            <span className="testi-quote">"</span>
-            <p className="testi-text">{t('t2_text')}</p>
-            <div className="testi-author">
-              <div className="testi-avatar"><img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&q=70&auto=format&fit=crop&crop=face" alt="" loading="lazy" /></div>
-              <div><div className="testi-name">{t('t2_author')}</div><div className="testi-role">{t('t2_role')}</div></div>
-              <div className="testi-stars">★★★★★</div>
-            </div>
-          </div>
-          <div className="testi-card reveal reveal-delay-2">
-            <span className="testi-quote">"</span>
-            <p className="testi-text">{t('t3_text')}</p>
-            <div className="testi-author">
-              <div className="testi-avatar"><img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&q=70&auto=format&fit=crop&crop=face" alt="" loading="lazy" /></div>
-              <div><div className="testi-name">{t('t3_author')}</div><div className="testi-role">{t('t3_role')}</div></div>
-              <div className="testi-stars">★★★★★</div>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
