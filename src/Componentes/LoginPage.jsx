@@ -1,23 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../supabaseClient'; // 🌟 Se mantiene este único import limpio
 import './LoginPage.css';
-
-// Ejemplo de función que puedes usar en el catálogo para traer las casas desde la Base de Datos
-import { supabase } from '../supabaseClient';
-
-export async function obtenerPropiedades() {
-  const { data, error } = await supabase
-    .from('propiedades')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error al obtener propiedades:', error);
-    return [];
-  }
-  return data; // Retorna el arreglo de casas con sus URLs de imágenes listas para renderizar
-}
 
 export default function LoginPage({ onVolver }) {
   const { t, i18n } = useTranslation();
@@ -57,8 +41,8 @@ export default function LoginPage({ onVolver }) {
           throw new Error(i18n.language.startsWith('es') ? 'Debes aceptar los términos y condiciones.' : 'You must accept the terms and conditions.');
         }
 
-        // Registro en Supabase pasando los metadatos del formulario para guardarlos en auth.users
-        const { data: signUpData, error: err } = await supabase.auth.signUp({
+        // Registro en Supabase pasando los metadatos adicionales del formulario
+        const { error: err } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -70,14 +54,7 @@ export default function LoginPage({ onVolver }) {
           }
         });
         if (err) throw err;
-
-        // Validar si requiere confirmación por correo electrónico o inicia directo
-        if (signUpData?.user && signUpData.session === null) {
-          setSuccess(t('register_success_confirm', { defaultValue: '¡Cuenta creada! Revisa tu correo electrónico para confirmar tu cuenta.' }));
-        } else {
-          setSuccess(t('register_success_msg', { defaultValue: '¡Cuenta creada e inicio de sesión exitoso!' }));
-          setTimeout(() => onVolver(), 1200);
-        }
+        setSuccess(t('register_success_msg', { defaultValue: '¡Cuenta creada! Revisa tu correo para confirmar.' }));
       }
     } catch (err) {
       setError(err.message);
@@ -107,7 +84,6 @@ export default function LoginPage({ onVolver }) {
           <div className="label">
             {modo === 'login' ? t('login_caption_lbl', { defaultValue: 'Premium Real Estate' }) : t('register_caption_lbl', { defaultValue: 'Únete a la colección' })}
           </div>
-          {/* Aquí corregí la llave de apertura < que faltaba */}
           <blockquote>
             {modo === 'login' 
               ? t('login_caption', { defaultValue: '"Una colección curada de propiedades excepcionales para quienes valoran la exclusividad."' })
@@ -235,4 +211,18 @@ export default function LoginPage({ onVolver }) {
       </section>
     </main>
   );
+}
+
+// ══ FUNCIÓN AUXILIAR DE PORTAFOLIO (CORREGIDA SIN DUPLICAR IMPORTS) ══
+export async function obtenerPropiedades() {
+  const { data, error } = await supabase
+    .from('propiedades')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error al obtener propiedades:', error);
+    return [];
+  }
+  return data;
 }

@@ -1,18 +1,48 @@
 import React, { useEffect, useRef, useState } from 'react';
 import LoginPage from './Componentes/LoginPage.jsx';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from './AuthContext.js'; 
+import { supabase } from './supabaseClient'; 
 import './App.css';
 
 function App() {
   const { t, i18n } = useTranslation();
+  const { user, signOut } = useAuth(); 
   const [vista, setVista] = useState('home');
+  const [propiedades, setPropiedades] = useState([]); 
   const rafRef = useRef(null);
 
   const cambiarIdioma = (idioma) => i18n.changeLanguage(idioma);
 
-  // ══ 1. CURSOR INTERACTIVO — Efecto aislado independiente (Evita el parpadeo) ══
+  // ══ CONSULTA DINÁMICA DE PROPIEDADES EN SUPABASE ══
   useEffect(() => {
-    // Los nodos del cursor se inyectan directamente al body para que no mueran al cambiar de vista
+    const cargarCasas = async () => {
+      const { data, error } = await supabase
+        .from('propiedades')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (!error && data && data.length > 0) {
+        setPropiedades(data); 
+      }
+    };
+    cargarCasas();
+  }, [vista]);
+
+  // Respaldos dinámicos en caso de que la tabla de Supabase no tenga registros aún
+  const listaPropiedades = propiedades.length > 0 ? propiedades : [
+    { id: '1', titulo: t('g_t1'), imagenes: ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c'] },
+    { id: '2', titulo: t('g_t2'), imagenes: ['https://images.unsplash.com/photo-1503174971373-b1f69850bded'] },
+    { id: '3', titulo: t('g_t3'), imagenes: ['https://images.unsplash.com/photo-1600607687939-ce8a6c25118c'] },
+    { id: '4', titulo: t('g_t4'), imagenes: ['https://images.unsplash.com/photo-1565372195458-9de0b320ef04'] },
+    { id: '5', titulo: t('g_t5'), imagenes: ['https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3'] },
+    { id: '6', titulo: t('g_t6'), imagenes: ['https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde'] },
+    { id: '7', titulo: t('g_t7'), imagenes: ['https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83'] },
+    { id: '8', titulo: t('g_t8'), imagenes: ['https://images.unsplash.com/photo-1582407947304-fd86f028f716'] }
+  ];
+
+  // ══ EFECTO INDEPENDIENTE DEL CURSOR (A PRUEBA DE PARPADEOS) ══
+  useEffect(() => {
     const cursor = document.createElement('div');
     cursor.className = 'cursor';
     cursor.id = 'appCursor';
@@ -47,9 +77,9 @@ function App() {
       cursor.remove();
       ring.remove();
     };
-  }, []); // Array vacío: Solo se monta una vez y no parpadea jamás
+  }, []);
 
-  // ══ 2. HOVER DEL CURSOR — Re-vincula los eventos cuando el DOM de la vista cambia ══
+  // ══ RE-VINCULACIÓN DE HOVERS AL CAMBIAR DE VISTA ══
   useEffect(() => {
     const ring = document.getElementById('appCursorRing');
     if (!ring) return;
@@ -78,9 +108,9 @@ function App() {
         el.removeEventListener('mouseleave', onLeave);
       });
     };
-  }, [vista]);
+  }, [vista, propiedades]);
 
-  // ══ 3. SCROLL NAV + ANIMACIONES REVEAL (Solo actúan en la Home) ══
+  // ══ SCROLL NAV + ANIMACIONES REVEAL ══
   useEffect(() => {
     if (vista !== 'home') return;
     const nav = document.getElementById('nav');
@@ -104,7 +134,6 @@ function App() {
     };
   }, [vista]);
 
-  // ══ INTERCAMBIO DE VISTAS ══
   if (vista === 'login') {
     return <LoginPage onVolver={() => setVista('home')} />;
   }
@@ -122,28 +151,19 @@ function App() {
         </ul>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           <div style={{ display: 'flex' }}>
-            <button
-              onClick={() => cambiarIdioma('es')}
-              style={{
-                background: i18n.language === 'es' ? '#A07840' : 'transparent',
-                color: 'white', border: '1px solid rgba(160,120,64,0.4)',
-                padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em',
-                fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer',
-              }}
-            >ES</button>
-            <button
-              onClick={() => cambiarIdioma('en')}
-              style={{
-                background: i18n.language === 'en' ? '#A07840' : 'transparent',
-                color: 'white', border: '1px solid rgba(160,120,64,0.4)',
-                padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em',
-                fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer',
-              }}
-            >EN</button>
+            <button onClick={() => cambiarIdioma('es')} style={{ background: i18n.language.startsWith('es') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>ES</button>
+            <button onClick={() => cambiarIdioma('en')} style={{ background: i18n.language.startsWith('en') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>EN</button>
           </div>
-          <button onClick={() => setVista('login')} className="nav-cta" style={{ border: 'none', cursor: 'pointer' }}>
-            {t('nav_btn')}
-          </button>
+          
+          {user ? (
+            <button onClick={() => signOut()} className="nav-cta" style={{ background: 'rgba(220,50,50,0.1)', borderColor: 'rgba(220,50,50,0.4)', color: '#ff7070' }}>
+              {user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ')[0].toUpperCase() : 'SALIR'} ✕
+            </button>
+          ) : (
+            <button onClick={() => setVista('login')} className="nav-cta">
+              {t('nav_btn')}
+            </button>
+          )}
         </div>
       </nav>
 
@@ -163,7 +183,7 @@ function App() {
           </h1>
           <p className="hero-desc">{t('hero_desc')}</p>
           <div className="hero-actions">
-            <a href="#contact" className="btn-primary">{t('btn_explorar')}</a>
+            <a href="#projects" className="btn-primary">{t('btn_explorar')}</a>
             <a href="#gallery" className="btn-ghost">{t('btn_ver_servicios')}</a>
           </div>
         </div>
@@ -172,17 +192,14 @@ function App() {
           <div className="hc-item"><span className="hc-num">{t('hc2_num')}</span><span className="hc-label">{t('hc2_label')}</span></div>
           <div className="hc-item"><span className="hc-num">{t('hc3_num')}</span><span className="hc-label">{t('hc3_label')}</span></div>
         </div>
-        <div className="hero-scroll">
-          <div className="scroll-line"></div>
-          <span>Scroll</span>
-        </div>
+        <div className="hero-scroll"><div className="scroll-line"></div><span>Scroll</span></div>
       </section>
 
       {/* ══ TICKER ══ */}
       <div className="ticker-bar">
         <div className="ticker-inner">
           {[...Array(2)].flatMap((_, pass) =>
-            ['ticker_1','ticker_2','ticker_3','ticker_4','ticker_5','ticker_6',             'ticker_7','ticker_8','ticker_9','ticker_10','ticker_11','ticker_12']
+            ['ticker_1','ticker_2','ticker_3','ticker_4','ticker_5','ticker_6', 'ticker_7','ticker_8','ticker_9','ticker_10','ticker_11','ticker_12']
               .map((key, i) => <span key={`${pass}-${i}`} className="ticker-item">{t(key)}</span>)
           )}
         </div>
@@ -191,49 +208,21 @@ function App() {
       {/* ══ FEATURES ══ */}
       <section className="features">
         <div className="features-grid">
-          <div className="feature-item reveal">
-            <span className="feature-num">01</span>
-            <div className="feature-icon-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#A07840" strokeWidth="1.2" strokeLinecap="round">
-                <path d="M3 21h4v-4H3v4zm0-6h4v-4H3v4zm6 6h4v-6H9v6zm0-10h4V7H9v4zm6 10h4V11h-4v10zm0-12h4V3h-4v6z"/>
-              </svg>
+          {[1, 2, 3, 4].map((num, i) => (
+            <div key={num} className={`feature-item reveal ${i > 0 ? `reveal-delay-${i}` : ''}`}>
+              <span className="feature-num">0{num}</span>
+              <div className="feature-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#A07840" strokeWidth="1.2" strokeLinecap="round">
+                  {num === 1 && <path d="M3 21h4v-4H3v4zm0-6h4v-4H3v4zm6 6h4v-6H9v6zm0-10h4V7H9v4zm6 10h4V11h-4v10zm0-12h4V3h-4v6z"/>}
+                  {num === 2 && <><rect x="2" y="6" width="20" height="14" rx="1"/><path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="9.5" y1="13.5" x2="14.5" y2="13.5"/></>}
+                  {num === 3 && <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>}
+                  {num === 4 && <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>}
+                </svg>
+              </div>
+              <h3 className="feature-title">{t(`f${num}_title_1`)}<br />{t(`f${num}_title_2`)}</h3>
+              <p className="feature-text">{t(`f${num}_desc`)}</p>
             </div>
-            <h3 className="feature-title">{t('f1_title_1')}<br />{t('f1_title_2')}</h3>
-            <p className="feature-text">{t('f1_desc')}</p>
-          </div>
-          <div className="feature-item reveal reveal-delay-1">
-            <span className="feature-num">02</span>
-            <div className="feature-icon-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#A07840" strokeWidth="1.2" strokeLinecap="round">
-                <rect x="2" y="6" width="20" height="14" rx="1"/>
-                <path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                <line x1="12" y1="11" x2="12" y2="16"/>
-                <line x1="9.5" y1="13.5" x2="14.5" y2="13.5"/>
-              </svg>
-            </div>
-            <h3 className="feature-title">{t('f2_title_1')}<br />{t('f2_title_2')}</h3>
-            <p className="feature-text">{t('f2_desc')}</p>
-          </div>
-          <div className="feature-item reveal reveal-delay-2">
-            <span className="feature-num">03</span>
-            <div className="feature-icon-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#A07840" strokeWidth="1.2" strokeLinecap="round">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-              </svg>
-            </div>
-            <h3 className="feature-title">{t('f3_title_1')}<br />{t('f3_title_2')}</h3>
-            <p className="feature-text">{t('f3_desc')}</p>
-          </div>
-          <div className="feature-item reveal reveal-delay-3">
-            <span className="feature-num">04</span>
-            <div className="feature-icon-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#A07840" strokeWidth="1.2" strokeLinecap="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-              </svg>
-            </div>
-            <h3 className="feature-title">{t('f4_title_1')}<br />{t('f4_title_2')}</h3>
-            <p className="feature-text">{t('f4_desc')}</p>
-          </div>
+          ))}
         </div>
       </section>
 
@@ -244,23 +233,14 @@ function App() {
             <div className="section-label">{t('gal_label')}</div>
             <h2 className="section-title">{t('gal_title_1')}<br />{t('gal_title_2')}<br />{t('gal_title_3')}</h2>
           </div>
-          <a href="#" className="view-all">{t('gal_view_all')}</a>
+          <a href="#projects" className="view-all">{t('gal_view_all')}</a>
         </div>
         <div className="gallery-grid">
-          {[
-            { key: 'g_t1', img: 'photo-1600585154340-be6161a56a0c' },
-            { key: 'g_t2', img: 'photo-1503174971373-b1f69850bded' },
-            { key: 'g_t3', img: 'photo-1600607687939-ce8a6c25118c' },
-            { key: 'g_t4', img: 'photo-1565372195458-9de0b320ef04' },
-            { key: 'g_t5', img: 'photo-1600566753190-17f0baa2a6c3' },
-            { key: 'g_t6', img: 'photo-1600047509807-ba8f99d2cdde' },
-            { key: 'g_t7', img: 'photo-1583608205776-bfd35f0d9f83' },
-            { key: 'g_t8', img: 'photo-1582407947304-fd86f028f716' },
-          ].map(({ key, img }, i) => (
-            <div key={key} className={`gal reveal${i % 3 === 1 ? ' reveal-delay-1' : i % 3 === 2 ? ' reveal-delay-2' : ''}`}>
-              <img src={`https://images.unsplash.com/${img}?w=600&q=75&auto=format&fit=crop`} alt={t(key)} loading="lazy" />
+          {listaPropiedades.slice(0, 8).map((casa, i) => (
+            <div key={casa.id} className={`gal reveal ${i % 4 === 1 ? 'reveal-delay-1' : i % 4 === 2 ? 'reveal-delay-2' : i % 4 === 3 ? 'reveal-delay-3' : ''}`}>
+              <img src={casa.imagenes && casa.imagenes[0] ? casa.imagenes[0] : "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80"} alt={casa.titulo} loading="lazy" />
               <div className="gal-overlay"></div>
-              <span className="gal-title">{t(key)}</span>
+              <span className="gal-title">{casa.titulo}</span>
             </div>
           ))}
         </div>
@@ -277,20 +257,14 @@ function App() {
             <h2 className="about-title">{t('about_title_1')}<br /><em>{t('about_title_2')}</em><br />{t('about_title_3')}</h2>
             <p className="about-text">{t('about_desc_1')}</p>
             <p className="about-text">{t('about_desc_2')}</p>
-            <a href="#" className="btn-outline-light" style={{ marginBottom: '48px', display: 'inline-flex' }}>{t('about_btn_more')}</a>
+            <a href="#contact" className="btn-outline-light" style={{ marginBottom: '48px', display: 'inline-flex' }}>{t('about_btn_more')}</a>
             <div className="about-stats">
-              <div className="stat-box">
-                <span className="stat-num">{t('as1_num')}<span className="stat-unit">{t('as1_unit')}</span></span>
-                <span className="stat-label">{t('as1_label')}</span>
-              </div>
-              <div className="stat-box">
-                <span className="stat-num">{t('as2_num')}<span className="stat-unit">{t('as2_unit')}</span></span>
-                <span className="stat-label">{t('as2_label')}</span>
-              </div>
-              <div className="stat-box">
-                <span className="stat-num">{t('as3_num')}<span className="stat-unit">{t('as3_unit')}</span></span>
-                <span className="stat-label">{t('as3_label')}</span>
-              </div>
+              {[1, 2, 3].map((num) => (
+                <div key={num} className="stat-box">
+                  <span className="stat-num">{t(`as${num}_num`)}<span className="stat-unit">{t(`as${num}_unit`)}</span></span>
+                  <span className="stat-label">{t(`as${num}_label`)}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
