@@ -38,8 +38,8 @@ const resources = {
       "gal_label": "Bienes Raíces Premium", "gal_title_1": "PROPIEDADES DISTINGUIDAS", "gal_title_2": "CON VALOR", "gal_title_3": "DURADERO", "gal_view_all": "EXPLORAR LA COLECCIÓN →",
       "g_t1": "Casas de Lujo", "g_t2": "Apartamentos Premium", "g_t3": "Propiedades Frente al Mar", "g_t4": "Propiedades de Inversión", "g_t5": "Terrenos en Desarrollo", "g_t6": "Activos Comerciales", "g_t7": "Lotes Privilegiados", "g_t8": "Colección Penthouse",
 
-      "about_label": "Sobre Nosotros", "about_title_1": "INMOVIRAL —", "about_title_2": "Ingeniería de", "about_title_3": "Excelencia",
-      "about_desc_1": "INMOVIRAL combines market expertise, modern strategy, and flawless service. We connect clients with properties that elevate their lifestyle and reflect their vision.",
+      "about_label": "Sobre Nosotros", "about_title_1": "INMOVIRAL —", "about_title_2": "Engineering de", "about_title_3": "Excelencia",
+      "about_desc_1": "INMOVIRAL combina experiencia en el mercado, estrategia moderna y un servicio impecable. Conectamos a nuestros clientes con propiedades que elevan su estilo de vida y reflejan su visión.",
       "about_desc_2": "Cada proyecto es una solución a medida, diseñada en torno a las necesidades, objetivos y el carácter único de cada propiedad.",
       "about_btn_more": "Conoce Más Sobre Nosotros →",
       "as1_num": "12", "as1_unit": "años", "as1_label": "De experiencia en asesoría y transacciones de bienes raíces premium",
@@ -90,7 +90,24 @@ const resources = {
       "login_caption_lbl": "Premium Real Estate",
       "login_caption": "\"Una colección curada de propiedades excepcionales para quienes valoran la exclusividad.\"",
       "login_success_msg": "¡Sesión iniciada correctamente!",
-      "register_success_msg": "¡Cuenta creada! Revisa tu correo para confirmar."
+      "register_success_msg": "¡Cuenta creada! Revisa tu correo para confirmar.",
+
+      // ══ NUEVOS TEXTOS MÓDULO REGISTER (ESPAÑOL) ══
+      "register_caption_lbl": "Únete a la colección",
+      "register_caption": "\"Cada propiedad es una solución a medida, diseñada en torno a la visión del cliente.\"",
+      "register_overline": "Acceso Privado",
+      "register_subtitle": "Accede a las propiedades más exclusivas del mercado.",
+      "register_name_lbl": "Nombre Completo",
+      "register_phone_lbl": "Teléfono",
+      "register_type_lbl": "Tipo de Cliente",
+      "register_type_placeholder": "Selecciona una opción",
+      "register_type_opt1": "Comprador",
+      "register_type_opt2": "Vendedor",
+      "register_type_opt3": "Inversionista",
+      "register_terms_1": "Acepto los ",
+      "register_terms_em": "términos y condiciones",
+      "register_terms_2": " y la política de privacidad de INMOVIRAL.",
+      "register_google": "Registrarse con Google"
     }
   },
   en: {
@@ -178,7 +195,24 @@ const resources = {
       "login_caption_lbl": "Premium Real Estate",
       "login_caption": "\"A curated collection of exceptional properties for those who value exclusivity.\"",
       "login_success_msg": "Signed in successfully!",
-      "register_success_msg": "Account created! Check your email to confirm."
+      "register_success_msg": "Account created! Check your email to confirm.",
+
+      // ══ NUEVOS TEXTOS MÓDULO REGISTER (INGLÉS) ══
+      "register_caption_lbl": "Join the collection",
+      "register_caption": "\"Every property is a tailored solution, crafted around the client's vision.\"",
+      "register_overline": "Private Access",
+      "register_subtitle": "Access the most exclusive properties on the market.",
+      "register_name_lbl": "Full Name",
+      "register_phone_lbl": "Phone Number",
+      "register_type_lbl": "Client Type",
+      "register_type_placeholder": "Select an option",
+      "register_type_opt1": "Buyer",
+      "register_type_opt2": "Seller",
+      "register_type_opt3": "Investor",
+      "register_terms_1": "I accept the ",
+      "register_terms_em": "terms and conditions",
+      "register_terms_2": " and the privacy policy of INMOVIRAL.",
+      "register_google": "Register with Google"
     }
   }
 };
