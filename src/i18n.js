@@ -4,7 +4,11 @@ import { initReactI18next } from 'react-i18next';
 const resources = {
   es: {
     translation: {
-      "nav_1": "Propiedades en Venta", "nav_2": "Propiedades en Renta", "nav_3": "Servicios Profesionales", "nav_4": "Configuración", "nav_btn": "Iniciar Sesión",
+      "nav_1": "Propiedades en Venta", 
+      "nav_2": "Propiedades en Renta", 
+      "nav_3": "Servicios Profesionales", 
+      "nav_4": "Configuración", 
+      "nav_btn": "Iniciar Sesión",
 
       // HERO
       "hero_tag": "SERVICIO PREMIUM · CONFIANZA COMPROBADA",
@@ -35,7 +39,7 @@ const resources = {
       "g_t1": "Casas de Lujo", "g_t2": "Apartamentos Premium", "g_t3": "Propiedades Frente al Mar", "g_t4": "Propiedades de Inversión", "g_t5": "Terrenos en Desarrollo", "g_t6": "Activos Comerciales", "g_t7": "Lotes Privilegiados", "g_t8": "Colección Penthouse",
 
       "about_label": "Sobre Nosotros", "about_title_1": "INMOVIRAL —", "about_title_2": "Ingeniería de", "about_title_3": "Excelencia",
-      "about_desc_1": "INMOVIRAL combina experiencia en el mercado, estrategia moderna y un servicio impecable. Conectamos a nuestros clientes con propiedades que elevan su estilo de vida y reflejan su visión.",
+      "about_desc_1": "INMOVIRAL combines market expertise, modern strategy, and flawless service. We connect clients with properties that elevate their lifestyle and reflect their vision.",
       "about_desc_2": "Cada proyecto es una solución a medida, diseñada en torno a las necesidades, objetivos y el carácter único de cada propiedad.",
       "about_btn_more": "Conoce Más Sobre Nosotros →",
       "as1_num": "12", "as1_unit": "años", "as1_label": "De experiencia en asesoría y transacciones de bienes raíces premium",
@@ -54,7 +58,7 @@ const resources = {
       "step5_title": "Soporte Post-Venta", "step5_desc": "5 años de soporte continuo y orientación después de cada transacción.",
 
       "testi-label": "Reseñas de Clientes", "testi-title": "La Confianza de Nuestros Clientes",
-      "t1_text": "Compramos la casa de nuestros sueños a través de INMOVIRAL. El resultado superó todas las expectativas — una experiencia verdaderamente excepcional y personalizada de principio a fin.", "t1_author": "Alejandro Mendoza", "t1_role": "Cliente Privado, Chihuahua",
+      "t1_text": "Compramos la casa de nuestros sueños a través de INMOVIRAL. El resultando superó todas las expectativas — una experiencia verdaderamente excepcional y personalizada de principio a fin.", "t1_author": "Alejandro Mendoza", "t1_role": "Cliente Privado, Chihuahua",
       "t2_text": "El equipo de INMOVIRAL gestionó cada paso con profesionalismo — desde la búsqueda inicial hasta el cierre. Los tiempos fueron respetados y la calidad del servicio fue sobresaliente.", "t2_author": "Mariana Rodríguez", "t2_role": "Diseñadora de Interiores",
       "t3_text": "Nuestro penthouse se convirtió en la pieza central de nuestro portafolio de inversión. Cada visita queda cautivada. ¡Gracias por el servicio impecable y la atención al detalle!", "t3_author": "Carlos González", "t3_role": "Cliente Privado, Miami",
 
@@ -64,7 +68,29 @@ const resources = {
       "footer_col1_title": "Empresa", "footer_link1": "Sobre Nosotros", "footer_link2": "Propiedades", "footer_link3": "Nuestro Equipo", "footer_link4": "Testimonios", "footer_link5": "Carreras",
       "footer_col2_title": "Catálogo",
       "footer_col3_title": "Contacto", "footer_hours": "Lun–Vie: 9:00 AM – 7:00 PM",
-      "footer_rights": "© 2026 INMOVIRAL. Todos los derechos reservados.", "footer_privacy": "Política de Privacidad", "footer_terms": "Términos de Uso"
+      "footer_rights": "© 2026 INMOVIRAL. Todos los derechos reservados.", "footer_privacy": "Política de Privacidad", "footer_terms": "Términos de Uso",
+
+      // ══ TEXTOS MÓDULO LOGIN (ESPAÑOL) ══
+      "login_welcome": "Bienvenido de nuevo",
+      "login_title": "Inicia sesión",
+      "login_title_reg": "Crea tu cuenta",
+      "login_subtitle": "Propiedades excepcionales para clientes exigentes.",
+      "login_email_lbl": "Correo Electrónico",
+      "login_pwd_lbl": "Contraseña",
+      "login_forgot": "¿Olvidaste?",
+      "login_btn": "Iniciar Sesión",
+      "login_btn_reg": "Registrarme",
+      "login_google": "Continuar con Google",
+      "login_no_account": "¿No tienes una cuenta?",
+      "login_has_account": "¿Ya tienes una cuenta?",
+      "login_register_link": "Regístrate",
+      "login_signin_link": "Inicia sesión",
+      "login_guest_lbl": "¿Prefieres continuar sin registrarte?",
+      "login_guest_link": "Continuar como invitado",
+      "login_caption_lbl": "Premium Real Estate",
+      "login_caption": "\"Una colección curada de propiedades excepcionales para quienes valoran la exclusividad.\"",
+      "login_success_msg": "¡Sesión iniciada correctamente!",
+      "register_success_msg": "¡Cuenta creada! Revisa tu correo para confirmar."
     }
   },
   en: {
@@ -125,11 +151,34 @@ const resources = {
 
       "cta_label": "Start Your Journey", "cta_title_1": "Find the Property", "cta_title_italic": "of Your Dreams", "cta_btn": "Request a Consultation →",
 
+      "premium_real_estate": "Premium Real Estate",
       "footer_tagline": "Premium real estate for modern lifestyles. Sales, leasing, and advisory services across domestic and international markets.",
       "footer_col1_title": "Company", "footer_link1": "About Us", "footer_link2": "Properties", "footer_link3": "Our Team", "footer_link4": "Testimonials", "footer_link5": "Careers",
       "footer_col2_title": "Catalog",
       "footer_col3_title": "Contact", "footer_hours": "Mon–Fri: 9:00 AM – 7:00 PM",
-      "footer_rights": "© 2026 INMOVIRAL. All rights reserved.", "footer_privacy": "Privacy Policy", "footer_terms": "Terms of Use"
+      "footer_rights": "© 2026 INMOVIRAL. All rights reserved.", "footer_privacy": "Privacy Policy", "footer_terms": "Terms of Use",
+
+      // ══ TEXTOS MÓDULO LOGIN (INGLÉS) ══
+      "login_welcome": "Welcome back",
+      "login_title": "Sign in",
+      "login_title_reg": "Create account",
+      "login_subtitle": "Exceptional properties for discerning clients.",
+      "login_email_lbl": "Email Address",
+      "login_pwd_lbl": "Password",
+      "login_forgot": "Forgot?",
+      "login_btn": "Sign In",
+      "login_btn_reg": "Register",
+      "login_google": "Continue with Google",
+      "login_no_account": "Don't have an account?",
+      "login_has_account": "Already have an account?",
+      "login_register_link": "Register here",
+      "login_signin_link": "Sign in",
+      "login_guest_lbl": "Prefer to browse without an account?",
+      "login_guest_link": "Continue as guest",
+      "login_caption_lbl": "Premium Real Estate",
+      "login_caption": "\"A curated collection of exceptional properties for those who value exclusivity.\"",
+      "login_success_msg": "Signed in successfully!",
+      "register_success_msg": "Account created! Check your email to confirm."
     }
   }
 };
