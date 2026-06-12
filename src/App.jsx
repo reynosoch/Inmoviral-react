@@ -154,22 +154,22 @@ function App() {
       <ul className="nav-links">
         <li>
           <a href="#" className={vista === 'venta' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setVista('venta'); }}>
-            {t('nav_sale', { defaultValue: 'Properties for sale' })}
+            {i18n.language.startsWith('es') ? 'Propiedades en Venta' : 'Properties for sale'}
           </a>
         </li>
         <li>
           <a href="#" className={vista === 'renta' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setVista('renta'); }}>
-            {t('nav_lease', { defaultValue: 'Properties for lease' })}
+            {i18n.language.startsWith('es') ? 'Propiedades en Renta' : 'Properties for lease'}
           </a>
         </li>
         <li>
           <a href={vista === 'home' ? '#projects' : '#'} onClick={(e) => { if(vista !== 'home') { setVista('home'); setTimeout(() => window.location.hash = '#projects', 100); } }}>
-            {t('nav_services', { defaultValue: 'Professional Services' })}
+            {i18n.language.startsWith('es') ? 'Servicios Virales' : 'Viral Services'}
           </a>
         </li>
         <li>
           <a href={vista === 'home' ? '#about' : '#'} onClick={(e) => { if(vista !== 'home') { setVista('home'); setTimeout(() => window.location.hash = '#about', 100); } }}>
-            {t('nav_config', { defaultValue: 'Configuration' })}
+            {i18n.language.startsWith('es') ? 'Sobre Nosotros' : 'About Us'}
           </a>
         </li>
       </ul>
@@ -180,11 +180,10 @@ function App() {
           </button>
         ) : (
           <button onClick={() => setVista('login')} className="nav-cta">
-            {t('nav_signin', { defaultValue: 'Sign In' })}
+            {i18n.language.startsWith('es') ? 'Iniciar Sesión' : 'Sign In'}
           </button>
         )}
 
-        {/* Selector de idioma con estilos del HTML */}
         <div style={{ display: 'flex' }}>
           <button onClick={() => cambiarIdioma('es')} style={{ background: i18n.language.startsWith('es') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>ES</button>
           <button onClick={() => cambiarIdioma('en')} style={{ background: i18n.language.startsWith('en') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>EN</button>
