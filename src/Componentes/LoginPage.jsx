@@ -41,8 +41,8 @@ export default function LoginPage({ onVolver }) {
           throw new Error(i18n.language.startsWith('es') ? 'Debes aceptar los términos y condiciones.' : 'You must accept the terms and conditions.');
         }
 
-        // Registro en Supabase pasando los metadatos adicionales del formulario
-        const { error: err } = await supabase.auth.signUp({
+        // Registro en Supabase pasando los metadatos exactos que el trigger de la base de datos va a leer
+        const { data: signUpData, error: err } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -53,8 +53,18 @@ export default function LoginPage({ onVolver }) {
             }
           }
         });
+        
         if (err) throw err;
-        setSuccess(t('register_success_msg', { defaultValue: '¡Cuenta creada! Revisa tu correo para confirmar.' }));
+
+        setSuccess(t('register_success_msg', { defaultValue: '¡Cuenta creada exitosamente! Revisa tu lista de usuarios.' }));
+        
+        // Limpiamos los campos del formulario tras el éxito
+        setFullName('');
+        setPhone('');
+        setEmail('');
+        setPassword('');
+        setClientType('');
+        setAcceptTerms(false);
       }
     } catch (err) {
       setError(err.message);

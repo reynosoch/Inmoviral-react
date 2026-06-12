@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-// URL del proyecto y clave pública provistas por el panel de Supabase
-const supabaseUrl = 'https://xyz-your-project-id.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+// Lee de forma dinámica las credenciales del archivo .env en Vite
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import LoginPage from './Componentes/LoginPage.jsx';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from './AuthContext.js'; 
+import { useAuth } from './AuthContext.js';
 import { supabase } from './supabaseClient'; 
 import './App.css';
 
@@ -238,7 +238,7 @@ function App() {
         <div className="gallery-grid">
           {listaPropiedades.slice(0, 8).map((casa, i) => (
             <div key={casa.id} className={`gal reveal ${i % 4 === 1 ? 'reveal-delay-1' : i % 4 === 2 ? 'reveal-delay-2' : i % 4 === 3 ? 'reveal-delay-3' : ''}`}>
-              <img src={casa.imagenes && casa.imagenes[0] ? casa.imagenes[0] : "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80"} alt={casa.titulo} loading="lazy" />
+              <img src={casa.imagenes && casa.imagenes[0] ? casa.imagenes[0] : "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80"} alt={casa.titulo || 'Propiedad'} loading="lazy" />
               <div className="gal-overlay"></div>
               <span className="gal-title">{casa.titulo}</span>
             </div>
@@ -302,7 +302,7 @@ function App() {
               <a href="#" className="btn-sm">{t('p2_btn')}</a>
             </div>
             <div className="product-img-wrap">
-              <img src="https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=500&q=80&auto=format&fit=crop&crop=right" alt="Premium Apartment" loading="lazy" />
+              <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=80&auto=format&fit=crop&crop=right" alt="Premium Apartment" loading="lazy" />
             </div>
           </div>
         </div>
