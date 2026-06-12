@@ -147,19 +147,19 @@ function App() {
     return <LoginPage onVolver={() => setVista('home')} />;
   }
 
-  // ══ COMPONENTE NAVBAR TRADUCIBLE EN TIEMPO REAL ══
+  // ══ COMPONENTE NAVBAR (TYPOS CORREGIDOS DE EN Y ES) ══
   const renderNavbar = () => (
     <nav id="nav" className={vista !== 'home' ? 'scrolled' : ''}>
       <a href="#" className="logo" onClick={(e) => { e.preventDefault(); setVista('home'); }}>INMOVIRAL</a>
       <ul className="nav-links">
         <li>
           <a href="#" className={vista === 'venta' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setVista('venta'); }}>
-            {i18n.language.startsWith('es') ? 'Propiedades en Venta' : 'Properties for sale'}
+            {i18n.language.startsWith('es') ? 'Propiedades en Venta' : 'Properties for Sale'}
           </a>
         </li>
         <li>
           <a href="#" className={vista === 'renta' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setVista('renta'); }}>
-            {i18n.language.startsWith('es') ? 'Propiedades en Renta' : 'Properties for lease'}
+            {i18n.language.startsWith('es') ? 'Propiedades en Renta' : 'Properties for Lease'}
           </a>
         </li>
         <li>
@@ -291,7 +291,7 @@ function App() {
           </div>
           <div className="reveal reveal-delay-1">
             <div className="about-label">{t('about_label')}</div>
-            <h2 className="about-title">{t('about_title_1')}<br /><em>{t('about_title_2')}</em><br />{t('about_title_3')}</h2>
+            <h2 className="about-label">{t('about_title_1')}<br /><em>{t('about_title_2')}</em><br />{t('about_title_3')}</h2>
             <p className="about-text">{t('about_desc_1')}</p>
             <p className="about-text">{t('about_desc_2')}</p>
             <a href="#contact" className="btn-outline-light" style={{ marginBottom: '48px', display: 'inline-flex' }}>{t('about_btn_more')}</a>
