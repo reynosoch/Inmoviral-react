@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import LoginPage from './Componentes/LoginPage.jsx';
+import PropiedadesVenta from './Componentes/PropiedadesVenta.jsx';
+import PropiedadesRenta from './Componentes/PropiedadesRenta.jsx';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './AuthContext.js';
 import { supabase } from './supabaseClient'; 
@@ -138,6 +140,66 @@ function App() {
     return <LoginPage onVolver={() => setVista('home')} />;
   }
 
+  if (vista === 'venta') {
+    return (
+      <>
+        <nav id="nav" className="scrolled">
+          <a href="#" className="logo" onClick={(e) => { e.preventDefault(); setVista('home'); }}>INMOVIRAL</a>
+          <ul className="nav-links">
+            <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('home'); }}>{t('nav_1')}</a></li>
+            <li><a href="#" className="active" onClick={(e) => { e.preventDefault(); setVista('venta'); }}>Venta</a></li>
+            <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('renta'); }}>Renta</a></li>
+            <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('home'); }}>{t('nav_4')}</a></li>
+          </ul>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div style={{ display: 'flex' }}>
+              <button onClick={() => cambiarIdioma('es')} style={{ background: i18n.language.startsWith('es') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>ES</button>
+              <button onClick={() => cambiarIdioma('en')} style={{ background: i18n.language.startsWith('en') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>EN</button>
+            </div>
+            {user ? (
+              <button onClick={() => signOut()} className="nav-cta" style={{ background: 'rgba(220,50,50,0.1)', borderColor: 'rgba(220,50,50,0.4)', color: '#ff7070' }}>
+                {user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ')[0].toUpperCase() : 'SALIR'} ✕
+              </button>
+            ) : (
+              <button onClick={() => setVista('login')} className="nav-cta">{t('nav_btn')}</button>
+            )}
+          </div>
+        </nav>
+        <PropiedadesVenta />
+      </>
+    );
+  }
+
+  if (vista === 'renta') {
+    return (
+      <>
+        <nav id="nav" className="scrolled">
+          <a href="#" className="logo" onClick={(e) => { e.preventDefault(); setVista('home'); }}>INMOVIRAL</a>
+          <ul className="nav-links">
+            <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('home'); }}>{t('nav_1')}</a></li>
+            <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('venta'); }}>Venta</a></li>
+            <li><a href="#" className="active" onClick={(e) => { e.preventDefault(); setVista('renta'); }}>Renta</a></li>
+            <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('home'); }}>{t('nav_4')}</a></li>
+          </ul>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div style={{ display: 'flex' }}>
+              <button onClick={() => cambiarIdioma('es')} style={{ background: i18n.language.startsWith('es') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>ES</button>
+              <button onClick={() => cambiarIdioma('en')} style={{ background: i18n.language.startsWith('en') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>EN</button>
+            </div>
+            {user ? (
+              <button onClick={() => signOut()} className="nav-cta" style={{ background: 'rgba(220,50,50,0.1)', borderColor: 'rgba(220,50,50,0.4)', color: '#ff7070' }}>
+                {user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ')[0].toUpperCase() : 'SALIR'} ✕
+              </button>
+            ) : (
+              <button onClick={() => setVista('login')} className="nav-cta">{t('nav_btn')}</button>
+            )}
+          </div>
+        </nav>
+        <PropiedadesRenta />
+      </>
+    );
+  }
+
   return (
     <>
       {/* ══ NAV ══ */}
@@ -145,8 +207,8 @@ function App() {
         <a href="#" className="logo">INMOVIRAL</a>
         <ul className="nav-links">
           <li><a href="#about">{t('nav_1')}</a></li>
-          <li><a href="#gallery">{t('nav_2')}</a></li>
-          <li><a href="#projects">{t('nav_3')}</a></li>
+          <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('venta'); }}>Propiedades en Venta</a></li>
+          <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('renta'); }}>Propiedades en Renta</a></li>
           <li><a href="#contact">{t('nav_4')}</a></li>
         </ul>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
