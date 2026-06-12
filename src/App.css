@@ -154,22 +154,37 @@ nav.scrolled {
     linear-gradient(to right, rgba(12,9,5,0.88) 0%, rgba(12,9,5,0.45) 55%, rgba(12,9,5,0.15) 100%),
     linear-gradient(to top, rgba(12,9,5,0.7) 0%, transparent 50%);
 }
+/* ─── HERO BODY (CORREGIDO) ─── */
 .hero-body {
-  position: relative; z-index: 5;
-  display: flex; flex-direction: column;
+  position: relative; 
+  z-index: 5;
+  display: flex; 
+  flex-direction: column;
   justify-content: flex-end;
   flex: 1;
-  padding: 0 60px 180px;
-}
-.hero-tag {
-  display: inline-flex; align-items: center; gap: 12px;
-  font-size: 11px; font-weight: 400;
-  letter-spacing: 0.22em; text-transform: uppercase;
-  color: var(--gold-light);
-  margin-bottom: 1px;
-  opacity: 0; animation: fadeUp 0.8s 0.4s ease forwards;
+  
+  /* 🌟 EL CAMBIO CLAVE: Cambiamos el relleno de abajo de 180px a 60px para bajar el texto, 
+     y blindamos la parte de arriba con 120px para que jamás toque el Navbar */
+  padding: 120px 60px 60px; 
 }
 
+/* ─── HERO TAG (CORREGIDO) ─── */
+.hero-tag {
+  display: inline-flex; 
+  align-items: center; 
+  gap: 12px;
+  font-size: 11px; 
+  font-weight: 400;
+  letter-spacing: 0.22em; 
+  text-transform: uppercase;
+  color: var(--gold-light);
+  
+  /* 🌟 Ajustamos el margen a 24px para mantener el aire premium sin saturar la altura */
+  margin-bottom: 24px; 
+  line-height: 1.5; 
+  opacity: 0; 
+  animation: fadeUp 0.8s 0.4s ease forwards;
+}
 .hero-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(44px, 5.5vw, 72px);
