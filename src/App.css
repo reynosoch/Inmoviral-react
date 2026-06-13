@@ -851,3 +851,39 @@ footer {
   .hero-counter { display: none; }
   .nav-links { gap: 24px; }
 }
+
+/* ─── HOVERS DE LA NUEVA VISTA NOSOTROS ─── */
+.historia-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+@media (max-width: 1024px) {
+  .historia-grid { grid-template-columns: 1fr; gap: 2rem; }
+}
+.valor {
+  transition: background 0.4s ease, transform 0.3s ease;
+}
+.valor:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+  transform: translateY(-2px);
+}
+.team-photo {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.team-photo img {
+  transition: filter 0.4s ease, transform 0.5s ease !important;
+}
+.team-card:hover .team-photo img {
+  filter: brightness(0.9) grayscale(0%) !important;
+  transform: scale(1.04);
+}
+.premio {
+  transition: background 0.3s ease;
+}
+.premio:hover {
+  background: rgba(160, 120, 64, 0.05);
+}

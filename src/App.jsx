@@ -3,6 +3,7 @@ import LoginPage from './Componentes/LoginPage.jsx';
 import PropiedadesVenta from './Componentes/PropiedadesVenta.jsx';
 import PropiedadesRenta from './Componentes/PropiedadesRenta.jsx';
 import ServiciosVirales from './Componentes/ServiciosVirales.jsx';
+import SobreNosotros from './Componentes/SobreNosotros.jsx'; // 🌟 Nuevo Import
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './AuthContext.js';
 import { supabase } from './supabaseClient'; 
@@ -144,77 +145,37 @@ function App() {
     };
   }, [vista]);
 
-  // ══ LOGIN ══
   if (vista === 'login') {
     return <LoginPage onVolver={() => setVista('home')} />;
   }
 
-  // ══ NAVBAR COMPARTIDO ══
+  // ══ NAVBAR COMPARTIDO (SIN CONTACTO Y CON ENLACE NOSOTROS ACTIVO) ══
   const renderNavbar = () => (
     <nav id="nav" className={vista !== 'home' ? 'scrolled' : ''}>
       <a href="#" className="logo" onClick={(e) => { e.preventDefault(); setVista('home'); }}>INMOVIRAL</a>
       <ul className="nav-links">
         <li>
-          <a
-            href="#"
-            className={vista === 'venta' ? 'active' : ''}
-            onClick={(e) => { e.preventDefault(); setVista('venta'); }}
-          >
-            {i18n.language.startsWith('es') ? 'En Venta' : 'For Sale'}
+          <a href="#" className={vista === 'venta' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setVista('venta'); }}>
+            {i18n.language.startsWith('es') ? 'Propiedades en Venta' : 'Properties for Sale'}
           </a>
         </li>
         <li>
-          <a
-            href="#"
-            className={vista === 'renta' ? 'active' : ''}
-            onClick={(e) => { e.preventDefault(); setVista('renta'); }}
-          >
-            {i18n.language.startsWith('es') ? 'En Renta' : 'For Lease'}
+          <a href="#" className={vista === 'renta' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setVista('renta'); }}>
+            {i18n.language.startsWith('es') ? 'Propiedades en Renta' : 'Properties for Lease'}
           </a>
         </li>
         <li>
-          <a
-            href="#"
-            className={vista === 'servicios' ? 'active' : ''}
-            onClick={(e) => { e.preventDefault(); setVista('servicios'); }}
-          >
+          <a href="#" className={vista === 'servicios' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setVista('servicios'); }}>
             {i18n.language.startsWith('es') ? 'Servicios Virales' : 'Viral Services'}
           </a>
         </li>
         <li>
-          <a
-            href={vista === 'home' ? '#about' : '#'}
-            onClick={(e) => {
-              if (vista !== 'home') {
-                e.preventDefault();
-                setVista('home');
-                setTimeout(() => { window.location.hash = '#about'; }, 120);
-              }
-            }}
-          >
-            {i18n.language.startsWith('es') ? 'Nosotros' : 'About'}
-          </a>
-        </li>
-        <li>
-          <a
-            href={vista === 'home' ? '#contact' : '#'}
-            onClick={(e) => {
-              if (vista !== 'home') {
-                e.preventDefault();
-                setVista('home');
-                setTimeout(() => { window.location.hash = '#contact'; }, 120);
-              }
-            }}
-          >
-            {i18n.language.startsWith('es') ? 'Contacto' : 'Contact'}
+          <a href="#" className={vista === 'nosotros' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setVista('nosotros'); }}>
+            {i18n.language.startsWith('es') ? 'Sobre Nosotros' : 'About Us'}
           </a>
         </li>
       </ul>
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-        <div style={{ display: 'flex' }}>
-          <button onClick={() => cambiarIdioma('es')} style={{ background: i18n.language.startsWith('es') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>ES</button>
-          <button onClick={() => cambiarIdioma('en')} style={{ background: i18n.language.startsWith('en') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>EN</button>
-        </div>
         {user ? (
           <button onClick={() => signOut()} className="nav-cta" style={{ background: 'rgba(220,50,50,0.1)', borderColor: 'rgba(220,50,50,0.4)', color: '#ff7070' }}>
             {user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ')[0].toUpperCase() : 'SALIR'} ✕
@@ -224,14 +185,32 @@ function App() {
             {i18n.language.startsWith('es') ? 'Iniciar Sesión' : 'Sign In'}
           </button>
         )}
+
+        <div style={{ display: 'flex' }}>
+          <button onClick={() => cambiarIdioma('es')} style={{ background: i18n.language.startsWith('es') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>ES</button>
+          <button onClick={() => cambiarIdioma('en')} style={{ background: i18n.language.startsWith('en') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>EN</button>
+        </div>
       </div>
     </nav>
   );
 
-  // ══ VISTAS SECUNDARIAS ══
+  // ══ REDIRECCIONES DE VISTAS ══
   if (vista === 'venta')     return <>{renderNavbar()}<PropiedadesVenta /></>;
   if (vista === 'renta')     return <>{renderNavbar()}<PropiedadesRenta /></>;
   if (vista === 'servicios') return <>{renderNavbar()}<ServiciosVirales onIrLogin={() => setVista('login')} /></>;
+  
+  // Conexión de tu nueva página de Nosotros con redirecciones internas de los botones del CTA
+  if (vista === 'nosotros') {
+    return (
+      <>
+        {renderNavbar()}
+        <SobreNosotros 
+          onIrServicios={() => setVista('servicios')} 
+          onIrPropiedades={() => setVista('venta')} 
+        />
+      </>
+    );
+  }
 
   // ══ HOME ══
   return (
@@ -328,7 +307,7 @@ function App() {
             <h2 className="about-title">{t('about_title_1')}<br /><em>{t('about_title_2')}</em><br />{t('about_title_3')}</h2>
             <p className="about-text">{t('about_desc_1')}</p>
             <p className="about-text">{t('about_desc_2')}</p>
-            <a href="#contact" className="btn-outline-light" style={{ marginBottom: '48px', display: 'inline-flex' }}>{t('about_btn_more')}</a>
+            <a href="#" className="btn-outline-light" style={{ marginBottom: '48px', display: 'inline-flex' }} onClick={(e) => { e.preventDefault(); setVista('nosotros'); }}>{t('about_btn_more')}</a>
             <div className="about-stats">
               {[1, 2, 3].map((num) => (
                 <div key={num} className="stat-box">
@@ -431,12 +410,12 @@ function App() {
       </section>
 
       {/* ══ CTA BANNER ══ */}
-      <div className="cta-banner" id="contact">
+      <div className="cta-banner">
         <img src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1600&q=80&auto=format&fit=crop" alt="" loading="lazy" />
         <div className="cta-overlay">
           <p className="cta-label">{t('cta_label')}</p>
           <h2 className="cta-title">{t('cta_title_1')}<br /><em>{t('cta_title_italic')}</em></h2>
-          <a href="tel:+78000000000" className="btn-primary" style={{ fontSize: '13px', padding: '18px 44px' }}>{t('cta_btn')}</a>
+          <a href="#" className="btn-primary" style={{ fontSize: '13px', padding: '18px 44px' }} onClick={(e) => { e.preventDefault(); setVista('nosotros'); }}>{t('cta_btn')}</a>
         </div>
       </div>
 
@@ -456,8 +435,8 @@ function App() {
           <div className="footer-col">
             <h4>{t('footer_col1_title')}</h4>
             <ul>
-              <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('venta'); }}>{t('footer_link1')}</a></li>
-              <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('renta'); }}>{t('footer_link2')}</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('nosotros'); }}>{t('footer_link1')}</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('venta'); }}>{t('footer_link2')}</a></li>
               <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('servicios'); }}>{t('footer_link3')}</a></li>
               <li><a href="#">{t('footer_link4')}</a></li>
               <li><a href="#">{t('footer_link5')}</a></li>
