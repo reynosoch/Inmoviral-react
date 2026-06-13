@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import LoginPage from './Componentes/LoginPage.jsx';
 import PropiedadesVenta from './Componentes/PropiedadesVenta.jsx';
 import PropiedadesRenta from './Componentes/PropiedadesRenta.jsx';
+import ServiciosVirales from './Componentes/ServiciosVirales.jsx';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './AuthContext.js';
 import { supabase } from './supabaseClient'; 
@@ -143,37 +144,77 @@ function App() {
     };
   }, [vista]);
 
+  // ══ LOGIN ══
   if (vista === 'login') {
     return <LoginPage onVolver={() => setVista('home')} />;
   }
 
-  // ══ COMPONENTE NAVBAR (TYPOS CORREGIDOS DE EN Y ES) ══
+  // ══ NAVBAR COMPARTIDO ══
   const renderNavbar = () => (
     <nav id="nav" className={vista !== 'home' ? 'scrolled' : ''}>
       <a href="#" className="logo" onClick={(e) => { e.preventDefault(); setVista('home'); }}>INMOVIRAL</a>
       <ul className="nav-links">
         <li>
-          <a href="#" className={vista === 'venta' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setVista('venta'); }}>
-            {i18n.language.startsWith('es') ? 'Propiedades en Venta' : 'Properties for Sale'}
+          <a
+            href="#"
+            className={vista === 'venta' ? 'active' : ''}
+            onClick={(e) => { e.preventDefault(); setVista('venta'); }}
+          >
+            {i18n.language.startsWith('es') ? 'En Venta' : 'For Sale'}
           </a>
         </li>
         <li>
-          <a href="#" className={vista === 'renta' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setVista('renta'); }}>
-            {i18n.language.startsWith('es') ? 'Propiedades en Renta' : 'Properties for Lease'}
+          <a
+            href="#"
+            className={vista === 'renta' ? 'active' : ''}
+            onClick={(e) => { e.preventDefault(); setVista('renta'); }}
+          >
+            {i18n.language.startsWith('es') ? 'En Renta' : 'For Lease'}
           </a>
         </li>
         <li>
-          <a href={vista === 'home' ? '#projects' : '#'} onClick={(e) => { if(vista !== 'home') { setVista('home'); setTimeout(() => window.location.hash = '#projects', 100); } }}>
+          <a
+            href="#"
+            className={vista === 'servicios' ? 'active' : ''}
+            onClick={(e) => { e.preventDefault(); setVista('servicios'); }}
+          >
             {i18n.language.startsWith('es') ? 'Servicios Virales' : 'Viral Services'}
           </a>
         </li>
         <li>
-          <a href={vista === 'home' ? '#about' : '#'} onClick={(e) => { if(vista !== 'home') { setVista('home'); setTimeout(() => window.location.hash = '#about', 100); } }}>
-            {i18n.language.startsWith('es') ? 'Sobre Nosotros' : 'About Us'}
+          <a
+            href={vista === 'home' ? '#about' : '#'}
+            onClick={(e) => {
+              if (vista !== 'home') {
+                e.preventDefault();
+                setVista('home');
+                setTimeout(() => { window.location.hash = '#about'; }, 120);
+              }
+            }}
+          >
+            {i18n.language.startsWith('es') ? 'Nosotros' : 'About'}
+          </a>
+        </li>
+        <li>
+          <a
+            href={vista === 'home' ? '#contact' : '#'}
+            onClick={(e) => {
+              if (vista !== 'home') {
+                e.preventDefault();
+                setVista('home');
+                setTimeout(() => { window.location.hash = '#contact'; }, 120);
+              }
+            }}
+          >
+            {i18n.language.startsWith('es') ? 'Contacto' : 'Contact'}
           </a>
         </li>
       </ul>
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <div style={{ display: 'flex' }}>
+          <button onClick={() => cambiarIdioma('es')} style={{ background: i18n.language.startsWith('es') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>ES</button>
+          <button onClick={() => cambiarIdioma('en')} style={{ background: i18n.language.startsWith('en') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>EN</button>
+        </div>
         {user ? (
           <button onClick={() => signOut()} className="nav-cta" style={{ background: 'rgba(220,50,50,0.1)', borderColor: 'rgba(220,50,50,0.4)', color: '#ff7070' }}>
             {user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ')[0].toUpperCase() : 'SALIR'} ✕
@@ -183,23 +224,16 @@ function App() {
             {i18n.language.startsWith('es') ? 'Iniciar Sesión' : 'Sign In'}
           </button>
         )}
-
-        <div style={{ display: 'flex' }}>
-          <button onClick={() => cambiarIdioma('es')} style={{ background: i18n.language.startsWith('es') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>ES</button>
-          <button onClick={() => cambiarIdioma('en')} style={{ background: i18n.language.startsWith('en') ? '#A07840' : 'transparent', color: 'white', border: '1px solid rgba(160,120,64,0.4)', padding: '8px 14px', fontSize: '11px', letterSpacing: '0.14em', fontFamily: 'inherit', transition: 'all 0.3s', cursor: 'pointer' }}>EN</button>
-        </div>
       </div>
     </nav>
   );
 
-  if (vista === 'venta') {
-    return <>{renderNavbar()}<PropiedadesVenta /></>;
-  }
+  // ══ VISTAS SECUNDARIAS ══
+  if (vista === 'venta')     return <>{renderNavbar()}<PropiedadesVenta /></>;
+  if (vista === 'renta')     return <>{renderNavbar()}<PropiedadesRenta /></>;
+  if (vista === 'servicios') return <>{renderNavbar()}<ServiciosVirales onIrLogin={() => setVista('login')} /></>;
 
-  if (vista === 'renta') {
-    return <>{renderNavbar()}<PropiedadesRenta /></>;
-  }
-
+  // ══ HOME ══
   return (
     <>
       {renderNavbar()}
@@ -212,7 +246,7 @@ function App() {
         <div className="hero-overlay"></div>
         <div className="hero-body">
           <div className="hero-tag">{t('hero_tag')}</div>
-          <h1 className="hero-title">
+          <h1 className={`hero-title ${i18n.language.startsWith('es') ? 'es-title' : ''}`}>
             {t('hero_title_1')}<br />
             <em>{t('hero_title_italic')}</em> {t('hero_title_for')}<br />
             {t('hero_title_2')}<br />
@@ -236,7 +270,7 @@ function App() {
       <div className="ticker-bar">
         <div className="ticker-inner">
           {[...Array(2)].flatMap((_, pass) =>
-            ['ticker_1','ticker_2','ticker_3','ticker_4','ticker_5','ticker_6', 'ticker_7','ticker_8','ticker_9','ticker_10','ticker_11','ticker_12']
+            ['ticker_1','ticker_2','ticker_3','ticker_4','ticker_5','ticker_6','ticker_7','ticker_8','ticker_9','ticker_10','ticker_11','ticker_12']
               .map((key, i) => <span key={`${pass}-${i}`} className="ticker-item">{t(key)}</span>)
           )}
         </div>
@@ -291,7 +325,7 @@ function App() {
           </div>
           <div className="reveal reveal-delay-1">
             <div className="about-label">{t('about_label')}</div>
-            <h2 className="about-label">{t('about_title_1')}<br /><em>{t('about_title_2')}</em><br />{t('about_title_3')}</h2>
+            <h2 className="about-title">{t('about_title_1')}<br /><em>{t('about_title_2')}</em><br />{t('about_title_3')}</h2>
             <p className="about-text">{t('about_desc_1')}</p>
             <p className="about-text">{t('about_desc_2')}</p>
             <a href="#contact" className="btn-outline-light" style={{ marginBottom: '48px', display: 'inline-flex' }}>{t('about_btn_more')}</a>
@@ -323,7 +357,7 @@ function App() {
                 <h3 className="product-title">{t('p1_title_1')}<br />{t('p1_title_2')}</h3>
                 <p className="product-desc">{t('p1_desc')}</p>
               </div>
-              <a href="#" className="btn-sm">{t('p1_btn')}</a>
+              <a href="#" className="btn-sm" onClick={(e) => { e.preventDefault(); setVista('servicios'); }}>{t('p1_btn')}</a>
             </div>
             <div className="product-img-wrap">
               <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=500&q=80&auto=format&fit=crop&crop=right" alt="Luxury Home" loading="lazy" />
@@ -336,7 +370,7 @@ function App() {
                 <h3 className="product-title">{t('p2_title_1')}<br />{t('p2_title_2')}</h3>
                 <p className="product-desc">{t('p2_desc')}</p>
               </div>
-              <a href="#" className="btn-sm">{t('p2_btn')}</a>
+              <a href="#" className="btn-sm" onClick={(e) => { e.preventDefault(); setVista('servicios'); }}>{t('p2_btn')}</a>
             </div>
             <div className="product-img-wrap">
               <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=80&auto=format&fit=crop&crop=right" alt="Premium Apartment" loading="lazy" />
@@ -387,7 +421,7 @@ function App() {
                 </div>
                 <div>
                   <div className="testi-name">{t(`t${n}_author`)}</div>
-                  <div className="testi-role">{t(`t` + n + `_role`)}</div>
+                  <div className="testi-role">{t(`t${n}_role`)}</div>
                 </div>
                 <div className="testi-stars">★★★★★</div>
               </div>
@@ -422,9 +456,9 @@ function App() {
           <div className="footer-col">
             <h4>{t('footer_col1_title')}</h4>
             <ul>
-              <li><a href="#">{t('footer_link1')}</a></li>
-              <li><a href="#">{t('footer_link2')}</a></li>
-              <li><a href="#">{t('footer_link3')}</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('venta'); }}>{t('footer_link1')}</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('renta'); }}>{t('footer_link2')}</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setVista('servicios'); }}>{t('footer_link3')}</a></li>
               <li><a href="#">{t('footer_link4')}</a></li>
               <li><a href="#">{t('footer_link5')}</a></li>
             </ul>
