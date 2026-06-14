@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../supabaseClient';
+import { useAuth } from '../AuthContext.js';
 import './Vendedor.css';
 
 // ── Nominatim autocomplete hook ───────────────────────────────────────────────
@@ -82,6 +84,7 @@ const SERVICIOS_VIRALES = [
 
 export default function Vendedor({ onVolver }) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const nom = useNominatim();
   const wrapRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -100,9 +103,23 @@ export default function Vendedor({ onVolver }) {
   });
   const [fotos, setFotos] = useState([]);
   const [enviado, setEnviado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [errorEnvio, setErrorEnvio] = useState('');
+  const [progresoSubida, setProgresoSubida] = useState('');
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, []);
   useEffect(() => { document.getElementById('publicar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [step]);
+
+  // Pre-rellena nombre/teléfono si el usuario ya inició sesión
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        nombre: prev.nombre || user.user_metadata?.full_name || '',
+        telefono: prev.telefono || user.user_metadata?.phone || '',
+      }));
+    }
+  }, [user]);
 
   // Cierra el dropdown si se hace click fuera
   useEffect(() => {
@@ -176,13 +193,98 @@ export default function Vendedor({ onVolver }) {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (step < 4) {
       if (canNext()) setStep(s => s + 1);
       return;
     }
-    setEnviado(true);
+
+    setErrorEnvio('');
+    setEnviando(true);
+
+    try {
+      // 1) Construir ubicación legible
+      const ubicacion = [form.colonia, form.ciudad, form.estado]
+        .filter(Boolean)
+        .join(', ') || form.busqueda || form.calle;
+
+      // 2) Mapear "operación" -> tipo esperado por PropiedadesVenta / PropiedadesRenta
+      let tipo = 'venta';
+      if (form.operacion === 'Renta') tipo = 'renta';
+      else if (form.operacion === 'Ambas') tipo = 'venta'; // se publica primero como venta
+
+      // 3) Subir fotos al bucket "propiedades" de Storage
+      const urlsImagenes = [];
+      for (let i = 0; i < fotos.length; i++) {
+        setProgresoSubida(t('vw_subiendo_foto', { current: i + 1, total: fotos.length, defaultValue: `Subiendo foto ${i + 1} de ${fotos.length}...` }));
+        const foto = fotos[i];
+        const ext = foto.file.name.split('.').pop();
+        const path = `${user?.id || 'anonimo'}/${Date.now()}_${i}.${ext}`;
+
+        const { error: uploadError } = await supabase
+          .storage
+          .from('propiedades')
+          .upload(path, foto.file, { cacheControl: '3600', upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase
+          .storage
+          .from('propiedades')
+          .getPublicUrl(path);
+
+        urlsImagenes.push(publicUrlData.publicUrl);
+      }
+      setProgresoSubida('');
+
+      // 4) Insertar la propiedad en la tabla "propiedades"
+      const nuevaPropiedad = {
+        user_id: user?.id || null,
+        titulo: form.titulo,
+        tipo,
+        operacion: form.operacion,
+        tipo_inmueble: form.tipo,
+        precio: form.precio,
+        ubicacion,
+        calle: form.calle,
+        colonia: form.colonia,
+        ciudad: form.ciudad,
+        estado: form.estado,
+        cp: form.cp,
+        pais: form.pais,
+        lat: form.lat ? parseFloat(form.lat) : null,
+        lng: form.lng ? parseFloat(form.lng) : null,
+        recamaras: form.recamaras,
+        banos: form.banos,
+        estacionamientos: form.estacionamientos,
+        antiguedad: form.antiguedad,
+        m2: form.superficie ? parseFloat(form.superficie.replace(/[^\d.]/g, '')) : null,
+        descripcion: form.descripcion,
+        amenidades: form.amenidades,
+        servicios_solicitados: form.servicios,
+        imagenes: urlsImagenes,
+        nombre_contacto: form.nombre,
+        telefono_contacto: form.telefono,
+        estatus: 'pendiente',
+      };
+
+      const { error: insertError } = await supabase
+        .from('propiedades')
+        .insert([nuevaPropiedad]);
+
+      if (insertError) throw insertError;
+
+      setEnviado(true);
+    } catch (err) {
+      console.error('Error al publicar propiedad:', err);
+      setErrorEnvio(
+        err.message || t('vw_error_publicar', { defaultValue: 'Ocurrió un error al publicar tu propiedad. Intenta de nuevo.' })
+      );
+    } finally {
+      setEnviando(false);
+      setProgresoSubida('');
+    }
   };
 
   const BENEFICIOS = [
@@ -274,6 +376,11 @@ export default function Vendedor({ onVolver }) {
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
                 </svg>
                 <p>{t('vw_publicado_msg')}</p>
+                {!user && (
+                  <p className="vw-success-note">
+                    {t('vw_publicado_anonimo', { defaultValue: 'Inicia sesión para administrar y editar tu propiedad desde tu cuenta.' })}
+                  </p>
+                )}
               </div>
             ) : (
               <form className="vd-form-grid" onSubmit={handleSubmit}>
@@ -488,15 +595,27 @@ export default function Vendedor({ onVolver }) {
                   </>
                 )}
 
+                {/* ── MENSAJE DE ERROR ── */}
+                {errorEnvio && step === 4 && (
+                  <div className="vd-field vd-full">
+                    <div className="vw-error-box">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      {errorEnvio}
+                    </div>
+                  </div>
+                )}
+
                 {/* ── NAVEGACIÓN ── */}
                 <div className="vw-nav-row vd-full">
-                  {step > 1 && (
+                  {step > 1 && !enviando && (
                     <button type="button" className="vw-btn-prev" onClick={() => setStep(s => s - 1)}>
                       {t('vw_anterior')}
                     </button>
                   )}
-                  <button type="submit" className="vd-submit-btn vw-btn-next" disabled={!canNext()}>
-                    {step < 4 ? t('vw_siguiente') : t('vw_publicar_btn')}
+                  <button type="submit" className="vd-submit-btn vw-btn-next" disabled={!canNext() || enviando}>
+                    {enviando
+                      ? (progresoSubida || t('vw_publicando', { defaultValue: 'Publicando...' }))
+                      : (step < 4 ? t('vw_siguiente') : t('vw_publicar_btn'))}
                   </button>
                 </div>
               </form>
