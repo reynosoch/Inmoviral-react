@@ -3,13 +3,19 @@ import { supabase } from '../supabaseClient';
 import './Propiedades.css';
 
 const FALLBACK = [
-  { id: 1, titulo: 'Casa Horizonte', ubicacion: 'Lomas de Chapultepec, CDMX', precio: '18,500,000', recamaras: 4, banos: 5, m2: 620, imagen: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80&auto=format&fit=crop' },
-  { id: 2, titulo: 'Residencia Soleil', ubicacion: 'Valle de Bravo, Edomex', precio: '32,000,000', recamaras: 5, banos: 6, m2: 1200, imagen: 'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=800&q=80&auto=format&fit=crop' },
-  { id: 3, titulo: 'Villa Dorada', ubicacion: 'Interlomas, Huixquilucan', precio: '12,800,000', recamaras: 3, banos: 4, m2: 380, imagen: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80&auto=format&fit=crop' },
-  { id: 4, titulo: 'Casa Mirador', ubicacion: 'San Ángel, CDMX', precio: '9,400,000', recamaras: 4, banos: 3, m2: 320, imagen: 'https://images.unsplash.com/photo-1565372195458-9de0b320ef04?w=800&q=80&auto=format&fit=crop' },
-  { id: 5, titulo: 'Residencia Cima', ubicacion: 'Bosques de las Lomas, CDMX', precio: '45,000,000', recamaras: 6, banos: 7, m2: 1500, imagen: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80&auto=format&fit=crop' },
-  { id: 6, titulo: 'Casa Serena', ubicacion: 'Pedregal de San Ángel, CDMX', precio: '22,000,000', recamaras: 4, banos: 5, m2: 750, imagen: 'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&q=80&auto=format&fit=crop' },
+  { id: 1, titulo: 'Casa Horizonte', ubicacion: 'Lomas de Chapultepec, CDMX', precio: 18500000, habitaciones: 4, banos: 5, m2: 620, imagenes: ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80&auto=format&fit=crop'] },
+  { id: 2, titulo: 'Residencia Soleil', ubicacion: 'Valle de Bravo, Edomex', precio: 32000000, habitaciones: 5, banos: 6, m2: 1200, imagenes: ['https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=800&q=80&auto=format&fit=crop'] },
+  { id: 3, titulo: 'Villa Dorada', ubicacion: 'Interlomas, Huixquilucan', precio: 12800000, habitaciones: 3, banos: 4, m2: 380, imagenes: ['https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80&auto=format&fit=crop'] },
+  { id: 4, titulo: 'Casa Mirador', ubicacion: 'San Ángel, CDMX', precio: 9400000, habitaciones: 4, banos: 3, m2: 320, imagenes: ['https://images.unsplash.com/photo-1565372195458-9de0b320ef04?w=800&q=80&auto=format&fit=crop'] },
+  { id: 5, titulo: 'Residencia Cima', ubicacion: 'Bosques de las Lomas, CDMX', precio: 45000000, habitaciones: 6, banos: 7, m2: 1500, imagenes: ['https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80&auto=format&fit=crop'] },
+  { id: 6, titulo: 'Casa Serena', ubicacion: 'Pedregal de San Ángel, CDMX', precio: 22000000, habitaciones: 4, banos: 5, m2: 750, imagenes: ['https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&q=80&auto=format&fit=crop'] },
 ];
+
+// Formatea números a "18,500,000" sin decimales
+const formatPrecio = (num) => {
+  if (num === null || num === undefined) return '0';
+  return Number(num).toLocaleString('es-MX', { maximumFractionDigits: 0 });
+};
 
 export default function PropiedadesVenta() {
   const [propiedades, setPropiedades] = useState([]);
@@ -22,7 +28,7 @@ export default function PropiedadesVenta() {
       const { data, error } = await supabase
         .from('propiedades')
         .select('*')
-        .eq('tipo', 'venta')
+        .eq('tipo_transaccion', 'Venta')
         .order('created_at', { ascending: false });
       if (!error && data && data.length > 0) setPropiedades(data);
       else setPropiedades(FALLBACK);
@@ -37,9 +43,9 @@ export default function PropiedadesVenta() {
       p.ubicacion?.toLowerCase().includes(filtro.toLowerCase())
     )
     .sort((a, b) => {
-      if (orden === 'precio-asc') return (a.precio_num || 0) - (b.precio_num || 0);
-      if (orden === 'precio-desc') return (b.precio_num || 0) - (a.precio_num || 0);
-      return 0;
+      if (orden === 'precio-asc') return (a.precio || 0) - (b.precio || 0);
+      if (orden === 'precio-desc') return (b.precio || 0) - (a.precio || 0);
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
     });
 
   return (
@@ -88,21 +94,21 @@ export default function PropiedadesVenta() {
             <article className="prop-card" key={p.id}>
               <div className="prop-img-wrap">
                 <img
-                  src={p.imagen || p.imagenes?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=70'}
+                  src={p.imagenes?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=70'}
                   alt={p.titulo}
                   loading="lazy"
                 />
                 <span className="prop-badge venta">Venta</span>
               </div>
               <div className="prop-body">
-                <div className="prop-price">${p.precio} <span>MXN</span></div>
+                <div className="prop-price">${formatPrecio(p.precio)} <span>MXN</span></div>
                 <h3 className="prop-name">{p.titulo}</h3>
                 <p className="prop-loc">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                   {p.ubicacion}
                 </p>
                 <div className="prop-specs">
-                  <span>🛏 {p.recamaras} rec.</span>
+                  <span>🛏 {p.habitaciones} rec.</span>
                   <span>🚿 {p.banos} baños</span>
                   <span>📐 {p.m2} m²</span>
                 </div>
