@@ -3,7 +3,8 @@ import LoginPage from './Componentes/LoginPage.jsx';
 import PropiedadesVenta from './Componentes/PropiedadesVenta.jsx';
 import PropiedadesRenta from './Componentes/PropiedadesRenta.jsx';
 import ServiciosVirales from './Componentes/ServiciosVirales.jsx';
-import SobreNosotros from './Componentes/SobreNosotros.jsx'; // 🌟 Nuevo Import
+import SobreNosotros from './Componentes/SobreNosotros.jsx';
+import Vendedor from './Componentes/Vendedor.jsx';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './AuthContext.js';
 import { supabase } from './supabaseClient'; 
@@ -175,11 +176,42 @@ function App() {
           </a>
         </li>
       </ul>
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-        {user ? (
-          <button onClick={() => signOut()} className="nav-cta" style={{ background: 'rgba(220,50,50,0.1)', borderColor: 'rgba(220,50,50,0.4)', color: '#ff7070' }}>
-            {user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ')[0].toUpperCase() : 'SALIR'} ✕
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+
+        {user && (
+          <button className="nav-publicar" onClick={() => setVista('vendedor')}>
+            {i18n.language.startsWith('es') ? '+ Publicar' : '+ Publish'}
           </button>
+        )}
+
+        {user ? (
+          <div className="nav-user-menu" tabIndex={0}
+            onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('open'); }}
+          >
+            <button className="nav-user-btn" onClick={(e) => e.currentTarget.closest('.nav-user-menu').classList.toggle('open')}>
+              <span className="nav-avatar">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="16" cy="16" r="16" fill="rgba(160,120,64,0.15)"/>
+                  <circle cx="16" cy="12" r="5" fill="#A07840" opacity="0.8"/>
+                  <path d="M6 26c0-5.523 4.477-10 10-10s10 4.477 10 10" fill="#A07840" opacity="0.5"/>
+                </svg>
+              </span>
+              <span className="nav-user-name">
+                {user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ')[0] : user.email?.split('@')[0]}
+              </span>
+              <svg className="nav-chevron" viewBox="0 0 10 6" fill="none">
+                <path d="M1 1l4 4 4-4" stroke="#A07840" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <div className="nav-dropdown">
+              <button className="nav-dropdown-item" onClick={() => signOut()}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                {i18n.language.startsWith('es') ? 'Cerrar Sesión' : 'Sign Out'}
+              </button>
+            </div>
+          </div>
         ) : (
           <button onClick={() => setVista('login')} className="nav-cta">
             {i18n.language.startsWith('es') ? 'Iniciar Sesión' : 'Sign In'}
@@ -198,8 +230,8 @@ function App() {
   if (vista === 'venta')     return <>{renderNavbar()}<PropiedadesVenta /></>;
   if (vista === 'renta')     return <>{renderNavbar()}<PropiedadesRenta /></>;
   if (vista === 'servicios') return <>{renderNavbar()}<ServiciosVirales onIrLogin={() => setVista('login')} /></>;
-  
-  // Conexión de tu nueva página de Nosotros con redirecciones internas de los botones del CTA
+  if (vista === 'vendedor')  return <>{renderNavbar()}<Vendedor onVolver={() => setVista('home')} /></>;
+
   if (vista === 'nosotros') {
     return (
       <>

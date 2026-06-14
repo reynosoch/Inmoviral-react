@@ -887,3 +887,137 @@ footer {
 .premio:hover {
   background: rgba(160, 120, 64, 0.05);
 }
+/* ══ NAVBAR — USER AVATAR & DROPDOWN ══ */
+
+/* Botón Publicar */
+.nav-publicar {
+  height: 36px;
+  padding: 0 16px;
+  background: linear-gradient(135deg, #A07840, #C39B5F);
+  color: #000;
+  border: none;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity .25s, transform .2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.nav-publicar:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* Contenedor del menú usuario */
+.nav-user-menu {
+  position: relative;
+}
+
+/* Botón visible: avatar + nombre + flecha */
+.nav-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 36px;
+  padding: 0 12px 0 6px;
+  background: transparent;
+  border: 1px solid rgba(160,120,64,0.4);
+  color: #F5F5F0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color .25s, background .25s;
+}
+.nav-user-btn:hover,
+.nav-user-menu.open .nav-user-btn {
+  border-color: #A07840;
+  background: rgba(160,120,64,0.07);
+}
+
+/* Avatar círculo */
+.nav-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.nav-avatar svg { width: 26px; height: 26px; }
+
+/* Nombre de usuario */
+.nav-user-name {
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Chevron flecha — rota cuando abierto */
+.nav-chevron {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  transition: transform .25s ease;
+}
+.nav-user-menu.open .nav-chevron { transform: rotate(180deg); }
+
+/* Dropdown panel */
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  background: #111110;
+  border: 1px solid rgba(160,120,64,0.25);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  overflow: hidden;
+  /* oculto por defecto */
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity .22s ease, transform .22s ease;
+  z-index: 200;
+}
+.nav-user-menu.open .nav-dropdown {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+
+/* Item del dropdown */
+.nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 18px;
+  background: none;
+  border: none;
+  color: #8A8A84;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: left;
+  transition: color .2s, background .2s;
+}
+.nav-dropdown-item:hover {
+  color: #F5F5F0;
+  background: rgba(160,120,64,0.08);
+}
+.nav-dropdown-item svg { stroke: #A07840; flex-shrink: 0; }
+
+/* Botón Sign In (cuando no hay sesión) — añade flecha */
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+}
