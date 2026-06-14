@@ -209,12 +209,15 @@ export default function Vendedor({ onVolver }) {
         .filter(Boolean)
         .join(', ') || form.busqueda || form.calle;
 
-      // 2) Mapear "operación" -> tipo esperado por PropiedadesVenta / PropiedadesRenta
-      let tipo = 'venta';
-      if (form.operacion === 'Renta') tipo = 'renta';
-      else if (form.operacion === 'Ambas') tipo = 'venta'; // se publica primero como venta
+      // 2) Mapear "operación" -> tipo_transaccion esperado por el CHECK constraint ('Venta' | 'Renta')
+      let tipoTransaccion = 'Venta';
+      if (form.operacion === 'Renta') tipoTransaccion = 'Renta';
+      else if (form.operacion === 'Ambas') tipoTransaccion = 'Venta'; // se publica primero como venta
 
-      // 3) Subir fotos al bucket "propiedades" de Storage
+      // 3) Limpiar precio a numeric (quita $, comas, espacios, "/mes", etc.)
+      const precioNumerico = parseFloat(String(form.precio).replace(/[^\d.]/g, '')) || 0;
+
+      // 4) Subir fotos al bucket "propiedades" de Storage
       const urlsImagenes = [];
       for (let i = 0; i < fotos.length; i++) {
         setProgresoSubida(t('vw_subiendo_foto', { current: i + 1, total: fotos.length, defaultValue: `Subiendo foto ${i + 1} de ${fotos.length}...` }));
@@ -238,14 +241,15 @@ export default function Vendedor({ onVolver }) {
       }
       setProgresoSubida('');
 
-      // 4) Insertar la propiedad en la tabla "propiedades"
+      // 5) Insertar la propiedad en la tabla "propiedades"
       const nuevaPropiedad = {
         user_id: user?.id || null,
+        propietario_id: user?.id || null,
         titulo: form.titulo,
-        tipo,
+        tipo_transaccion: tipoTransaccion,
         operacion: form.operacion,
         tipo_inmueble: form.tipo,
-        precio: form.precio,
+        precio: precioNumerico,
         ubicacion,
         calle: form.calle,
         colonia: form.colonia,
@@ -255,11 +259,11 @@ export default function Vendedor({ onVolver }) {
         pais: form.pais,
         lat: form.lat ? parseFloat(form.lat) : null,
         lng: form.lng ? parseFloat(form.lng) : null,
-        recamaras: form.recamaras,
+        habitaciones: form.recamaras,
         banos: form.banos,
         estacionamientos: form.estacionamientos,
         antiguedad: form.antiguedad,
-        m2: form.superficie ? parseFloat(form.superficie.replace(/[^\d.]/g, '')) : null,
+        m2: form.superficie ? parseFloat(String(form.superficie).replace(/[^\d.]/g, '')) : null,
         descripcion: form.descripcion,
         amenidades: form.amenidades,
         servicios_solicitados: form.servicios,
