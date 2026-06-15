@@ -227,6 +227,31 @@ const resources = {
       "vw_siguiente": "Siguiente →",
       "vw_publicar_btn": "Publicar Propiedad →",
       "vw_publicado_msg": "¡Tu propiedad ha sido publicada con éxito! Un asesor revisará tu anuncio y se pondrá en contacto contigo.",
+
+      "props_venta_eyebrow": "— Colección Exclusiva",
+      "props_venta_title_1": "Propiedades",
+      "props_venta_title_em": "en Venta",
+      "props_venta_sub": "Residencias de lujo seleccionadas para quienes exigen lo mejor.",
+
+      "props_renta_eyebrow": "— Espacios Disponibles",
+      "props_renta_title_1": "Propiedades",
+      "props_renta_title_em": "en Renta",
+      "props_renta_sub": "Encuentra tu próximo hogar temporal entre nuestra selección exclusiva.",
+
+      "props_search_ph": "Buscar por nombre o ubicación...",
+      "props_sort_reciente": "Más Recientes",
+      "props_sort_precio_asc": "Precio: Menor a Mayor",
+      "props_sort_precio_desc": "Precio: Mayor a Menor",
+      "props_count_singular": "propiedad",
+      "props_count_plural": "propiedades",
+
+      "props_badge_venta": "Venta",
+      "props_badge_renta": "Renta",
+      "props_per_month": "/mes MXN",
+      "props_currency": "MXN",
+      "props_rec": "rec.",
+      "props_banos": "baños",
+      "props_ver_propiedad": "Ver Propiedad →",
     }
   },
   en: {
@@ -451,6 +476,31 @@ const resources = {
       "vw_siguiente": "Next →",
       "vw_publicar_btn": "Publish Property →",
       "vw_publicado_msg": "Your property has been published successfully! An advisor will review your listing and contact you.",
+
+      "props_venta_eyebrow": "— Exclusive Collection",
+      "props_venta_title_1": "Properties",
+      "props_venta_title_em": "for Sale",
+      "props_venta_sub": "Luxury residences selected for those who demand the best.",
+
+      "props_renta_eyebrow": "— Available Spaces",
+      "props_renta_title_1": "Properties",
+      "props_renta_title_em": "for Rent",
+      "props_renta_sub": "Find your next temporary home among our exclusive selection.",
+
+      "props_search_ph": "Search by name or location...",
+      "props_sort_reciente": "Most Recent",
+      "props_sort_precio_asc": "Price: Low to High",
+      "props_sort_precio_desc": "Price: High to Low",
+      "props_count_singular": "property",
+      "props_count_plural": "properties",
+
+      "props_badge_venta": "Sale",
+      "props_badge_renta": "Rent",
+      "props_per_month": "/mo MXN",
+      "props_currency": "MXN",
+      "props_rec": "bd.",
+      "props_banos": "ba.",
+      "props_ver_propiedad": "View Property →",
     }
   }
 };

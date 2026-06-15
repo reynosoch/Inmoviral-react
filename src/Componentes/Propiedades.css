@@ -32,6 +32,9 @@
 .props-hero--renta img {
   object-position: center 40%;
 }
+.props-hero--venta img {
+  object-position: center 45%;
+}
 .props-hero-body {
   position: relative;
   z-index: 2;

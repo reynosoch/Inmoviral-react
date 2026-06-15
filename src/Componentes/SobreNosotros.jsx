@@ -1,5 +1,10 @@
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import imgJavier from '../assets/equipo/javier-reynoso.png';
+import imgLuisa from '../assets/equipo/luisa-leyva.png';
+import imgAngel from '../assets/equipo/angel-contreras.jpeg';
+import imgJamin from '../assets/equipo/jamin-alvarez.png';
+import imgCarlos from '../assets/equipo/carlos-garcia.png';
 
 export default function SobreNosotros({ onIrServicios, onIrPropiedades }) {
   const { i18n } = useTranslation();
@@ -70,30 +75,36 @@ export default function SobreNosotros({ onIrServicios, onIrPropiedades }) {
         </div>
       </section>
 
-      {/* ─── HISTORIA ─── */}
+      {/* ─── EQUIPO ─── */}
       <section className="section" style={{ padding: '7rem 3.5rem' }}>
         <div className="section-inner" style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div className="historia-grid">
-            <div className="historia-img reveal">
-              <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?crop=entropy&cs=srgb&fm=jpg&q=85" alt="Oficinas INMOVIRAL" style={{ width: '100%', height: '520px', objectFit: 'cover', filter: 'brightness(0.75)' }} />
+          <div className="equipo-intro reveal" style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 1024 ? '1fr 1fr' : '1fr', gap: '4rem', marginBottom: '5rem' }}>
+            <div>
+              <div className="section-label" style={{ color: '#A07840', fontSize: '0.62rem', letterSpacing: '0.3em' }}>{es ? 'El Equipo' : 'The Team'}</div>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.5rem', fontWeight: 300 }}>{es ? <>Personas que<br />hacen la <em>diferencia</em></> : <>People Who<br />Make the <em>Difference</em></>}</h2>
             </div>
-            <div className="historia-body reveal" style={{ paddingLeft: window.innerWidth > 1024 ? '3rem' : '0' }}>
-              <div className="section-label" style={{ fontSize: '0.62rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#A07840', fontWeight: 500, marginBottom: '1rem' }}>{es ? 'Nuestra Historia' : 'Our Story'}</div>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2rem, 3.5vw, 3rem)', fontWeight: 300, marginBottom: '2rem' }}>
-                {es ? <>Fundados sobre la<br /><em>confianza y la visión</em></> : <>Founded on<br /><em>trust and vision</em></>}
-              </h2>
-              {es ? (
-                <>
-                  <p style={{ fontSize: '0.82rem', lineHeight: 2, color: '#8A8A84', marginBottom: '1.5rem' }}>Fundamos INMOVIRAL con una premisa simple: <strong>el cliente siempre merece más de lo que espera.</strong> Comenzamos con un pequeño equipo de asesores apasionados por la arquitectura y el mercado de alto segmento, creciendo guiados por resultados.</p>
-                  <p style={{ fontSize: '0.82rem', lineHeight: 2, color: '#8A8A84', marginBottom: '1.5rem' }}>A lo largo de los años hemos construido una red de compradores calificados, vendedores exigentes e inversionistas estratégicos que confían en nuestro criterio profesional para transformar sus patrimonios.</p>
-                </>
-              ) : (
-                <>
-                  <p style={{ fontSize: '0.82rem', lineHeight: 2, color: '#8A8A84', marginBottom: '1.5rem' }}>We founded INMOVIRAL with a simple premise: <strong>the client always deserves more than they expect.</strong> We started with a small team of consultants passionate about premium architecture, growing through results.</p>
-                  <p style={{ fontSize: '0.82rem', lineHeight: 2, color: '#8A8A84', marginBottom: '1.5rem' }}>Over the years we have built an elite network of qualified buyers, discerning sellers, and strategic investors who trust our judgment to build and transform their wealth.</p>
-                </>
-              )}
-            </div>
+            <p style={{ fontSize: '0.82rem', lineHeight: 2, color: '#8A8A84', paddingTop: '0.5rem' }}>
+              {es 
+                ? 'Somos un equipo multidisciplinario con experiencia legal, financiera y de diseño de interiores. Cada asesor gestiona un número limitado de propiedades para garantizar atención plena y exclusiva.'
+                : 'We are a multidisciplinary team with legal, financial, and interior design expertise. Each advisor manages a limited number of clients to guarantee focused and exclusive attention.'}
+            </p>
+          </div>
+          <div className="team-grid" style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 1024 ? 'repeat(5, 1fr)' : window.innerWidth > 640 ? 'repeat(3, 1fr)' : '1fr', gap: '2rem' }}>
+            {[
+              { name: 'Javier Reynoso', role: es ? 'Líder · INMOVIRAL' : 'Lead · INMOVIRAL', img: imgJavier },
+              { name: 'Luisa Leyva', role: es ? 'Diseñadora de Interfaz / UX' : 'UI / UX Designer', img: imgLuisa },
+              { name: 'Angel Contreras', role: es ? 'Co-Líder / Desarrollo' : 'Co-Lead / Development', img: imgAngel },
+              { name: 'Jamin Álvarez', role: es ? 'Arquitectura de Datos' : 'Data Architecture', img: imgJamin },
+              { name: 'Carlos García', role: es ? 'Recursos humanos' : 'Human Resources', img: imgCarlos }
+            ].map((m, i) => (
+              <div key={i} className="team-card reveal">
+                <div className="team-photo" style={{ overflow: 'hidden', marginBottom: '1.2rem' }}>
+                  <img src={m.img} alt={m.name} style={{ width: '100%', height: '300px', objectFit: 'cover', objectPosition: 'top', filter: 'brightness(0.7) grayscale(20%)', display: 'block' }} />
+                </div>
+                <div className="team-name" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3rem' }}>{m.name}</div>
+                <div className="team-role" style={{ fontSize: '0.6rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A07840', fontWeight: 500 }}>{m.role}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -122,35 +133,30 @@ export default function SobreNosotros({ onIrServicios, onIrPropiedades }) {
         </div>
       </section>
 
-      {/* ─── EQUIPO ─── */}
+      {/* ─── HISTORIA ─── */}
       <section className="section" style={{ padding: '7rem 3.5rem' }}>
         <div className="section-inner" style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div className="equipo-intro reveal" style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 1024 ? '1fr 1fr' : '1fr', gap: '4rem', marginBottom: '5rem' }}>
-            <div>
-              <div className="section-label" style={{ color: '#A07840', fontSize: '0.62rem', letterSpacing: '0.3em' }}>{es ? 'El Equipo' : 'The Team'}</div>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.5rem', fontWeight: 300 }}>{es ? <>Personas que<br />hacen la <em>diferencia</em></> : <>People Who<br />Make the <em>Difference</em></>}</h2>
+          <div className="historia-grid">
+            <div className="historia-img reveal">
+              <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?crop=entropy&cs=srgb&fm=jpg&q=85" alt="Oficinas INMOVIRAL" style={{ width: '100%', height: '520px', objectFit: 'cover', filter: 'brightness(0.75)' }} />
             </div>
-            <p style={{ fontSize: '0.82rem', lineHeight: 2, color: '#8A8A84', paddingTop: '0.5rem' }}>
-              {es 
-                ? 'Somos un equipo multidisciplinario con experiencia legal, financiera y de diseño de interiores. Cada asesor gestiona un número limitado de propiedades para garantizar atención plena y exclusiva.'
-                : 'We are a multidisciplinary team with legal, financial, and interior design expertise. Each advisor manages a limited number of clients to guarantee focused and exclusive attention.'}
-            </p>
-          </div>
-          <div className="team-grid" style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 640 ? 'repeat(4, 1fr)' : '1fr', gap: '2rem' }}>
-            {[
-              { name: 'Carlos Mendoza', role: es ? 'Director General' : 'CEO', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80' },
-              { name: 'Valentina Ríos', role: es ? 'Directora de Ventas' : 'Sales Director', img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80' },
-              { name: 'Alejandro Torres', role: es ? 'Asesor Senior' : 'Senior Advisor', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80' },
-              { name: 'Sofía Castillo', role: es ? 'Estrategia de Inversión' : 'Investment Strategy', img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80' }
-            ].map((m, i) => (
-              <div key={i} className="team-card reveal">
-                <div className="team-photo" style={{ overflow: 'hidden', marginBottom: '1.2rem' }}>
-                  <img src={m.img} alt={m.name} style={{ width: '100%', height: '300px', objectFit: 'cover', objectPosition: 'top', filter: 'brightness(0.7) grayscale(20%)', display: 'block' }} />
-                </div>
-                <div className="team-name" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3rem' }}>{m.name}</div>
-                <div className="team-role" style={{ fontSize: '0.6rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A07840', fontWeight: 500 }}>{m.role}</div>
-              </div>
-            ))}
+            <div className="historia-body reveal" style={{ paddingLeft: window.innerWidth > 1024 ? '3rem' : '0' }}>
+              <div className="section-label" style={{ fontSize: '0.62rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#A07840', fontWeight: 500, marginBottom: '1rem' }}>{es ? 'Nuestra Historia' : 'Our Story'}</div>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2rem, 3.5vw, 3rem)', fontWeight: 300, marginBottom: '2rem' }}>
+                {es ? <>Fundados sobre la<br /><em>confianza y la visión</em></> : <>Founded on<br /><em>trust and vision</em></>}
+              </h2>
+              {es ? (
+                <>
+                  <p style={{ fontSize: '0.82rem', lineHeight: 2, color: '#8A8A84', marginBottom: '1.5rem' }}>Fundamos INMOVIRAL con una premisa simple: <strong>el cliente siempre merece más de lo que espera.</strong> Comenzamos con un pequeño equipo de asesores apasionados por la arquitectura y el mercado de alto segmento, creciendo guiados por resultados.</p>
+                  <p style={{ fontSize: '0.82rem', lineHeight: 2, color: '#8A8A84', marginBottom: '1.5rem' }}>A lo largo de los años hemos construido una red de compradores calificados, vendedores exigentes e inversionistas estratégicos que confían en nuestro criterio profesional para transformar sus patrimonios.</p>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: '0.82rem', lineHeight: 2, color: '#8A8A84', marginBottom: '1.5rem' }}>We founded INMOVIRAL with a simple premise: <strong>the client always deserves more than they expect.</strong> We started with a small team of consultants passionate about premium architecture, growing through results.</p>
+                  <p style={{ fontSize: '0.82rem', lineHeight: 2, color: '#8A8A84', marginBottom: '1.5rem' }}>Over the years we have built an elite network of qualified buyers, discerning sellers, and strategic investors who trust our judgment to build and transform their wealth.</p>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </section>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../supabaseClient';
 import './Propiedades.css';
 
@@ -17,7 +18,8 @@ const formatPrecio = (num) => {
   return Number(num).toLocaleString('es-MX', { maximumFractionDigits: 0 });
 };
 
-export default function PropiedadesRenta() {
+export default function PropiedadesRenta({ onVerPropiedad }) {
+  const { t } = useTranslation();
   const [propiedades, setPropiedades] = useState([]);
   const [filtro, setFiltro] = useState('');
   const [orden, setOrden] = useState('reciente');
@@ -54,13 +56,13 @@ export default function PropiedadesRenta() {
       <section className="props-hero props-hero--renta">
         <img
           src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=1800&q=80&auto=format&fit=crop"
-          alt="Propiedades en Renta"
+          alt={t('props_renta_title_1') + ' ' + t('props_renta_title_em')}
         />
         <div className="props-hero-overlay" />
         <div className="props-hero-body">
-          <div className="props-eyebrow">— Espacios Disponibles</div>
-          <h1>Propiedades<br /><em>en Renta</em></h1>
-          <p>Encuentra tu próximo hogar temporal entre nuestra selección exclusiva.</p>
+          <div className="props-eyebrow">{t('props_renta_eyebrow')}</div>
+          <h1>{t('props_renta_title_1')}<br /><em>{t('props_renta_title_em')}</em></h1>
+          <p>{t('props_renta_sub')}</p>
         </div>
       </section>
 
@@ -70,7 +72,7 @@ export default function PropiedadesRenta() {
           <input
             className="props-search-input"
             type="text"
-            placeholder="Buscar por nombre o ubicación..."
+            placeholder={t('props_search_ph')}
             value={filtro}
             onChange={e => setFiltro(e.target.value)}
           />
@@ -79,11 +81,13 @@ export default function PropiedadesRenta() {
             value={orden}
             onChange={e => setOrden(e.target.value)}
           >
-            <option value="reciente">Más Recientes</option>
-            <option value="precio-asc">Precio: Menor a Mayor</option>
-            <option value="precio-desc">Precio: Mayor a Menor</option>
+            <option value="reciente">{t('props_sort_reciente')}</option>
+            <option value="precio-asc">{t('props_sort_precio_asc')}</option>
+            <option value="precio-desc">{t('props_sort_precio_desc')}</option>
           </select>
-          <div className="props-count">{lista.length} propiedad{lista.length !== 1 ? 'es' : ''}</div>
+          <div className="props-count">
+            {lista.length} {lista.length !== 1 ? t('props_count_plural') : t('props_count_singular')}
+          </div>
         </div>
       </section>
 
@@ -98,21 +102,23 @@ export default function PropiedadesRenta() {
                   alt={p.titulo}
                   loading="lazy"
                 />
-                <span className="prop-badge renta">Renta</span>
+                <span className="prop-badge renta">{t('props_badge_renta')}</span>
               </div>
               <div className="prop-body">
-                <div className="prop-price">${formatPrecio(p.precio)}<span>/mes MXN</span></div>
+                <div className="prop-price">${formatPrecio(p.precio)}<span>{t('props_per_month')}</span></div>
                 <h3 className="prop-name">{p.titulo}</h3>
                 <p className="prop-loc">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                   {p.ubicacion}
                 </p>
                 <div className="prop-specs">
-                  <span>🛏 {p.habitaciones} rec.</span>
-                  <span>🚿 {p.banos} baños</span>
+                  <span>🛏 {p.habitaciones} {t('props_rec')}</span>
+                  <span>🚿 {p.banos} {t('props_banos')}</span>
                   <span>📐 {p.m2} m²</span>
                 </div>
-                <button className="prop-btn">Ver Propiedad →</button>
+                <button className="prop-btn" onClick={() => onVerPropiedad && onVerPropiedad(p.id)}>
+                  {t('props_ver_propiedad')}
+                </button>
               </div>
             </article>
           ))}

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import LoginPage from './Componentes/LoginPage.jsx';
 import PropiedadesVenta from './Componentes/PropiedadesVenta.jsx';
 import PropiedadesRenta from './Componentes/PropiedadesRenta.jsx';
+import VerPropiedad from './Componentes/VerPropiedad.jsx';
 import ServiciosVirales from './Componentes/ServiciosVirales.jsx';
 import SobreNosotros from './Componentes/SobreNosotros.jsx';
 import Vendedor from './Componentes/Vendedor.jsx';
@@ -14,10 +15,21 @@ function App() {
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth(); 
   const [vista, setVista] = useState('home');
+  const [propiedadSeleccionada, setPropiedadSeleccionada] = useState(null);
   const [propiedades, setPropiedades] = useState([]); 
   const rafRef = useRef(null);
 
   const cambiarIdioma = (idioma) => i18n.changeLanguage(idioma);
+
+  const irAPropiedad = (id) => {
+    setPropiedadSeleccionada(id);
+    setVista('propiedad');
+  };
+
+  const volverDePropiedad = (destino) => {
+    setPropiedadSeleccionada(null);
+    setVista(destino || 'home');
+  };
 
   // ══ CONSULTA DINÁMICA DE PROPIEDADES EN SUPABASE ══
   useEffect(() => {
@@ -227,8 +239,9 @@ function App() {
   );
 
   // ══ REDIRECCIONES DE VISTAS ══
-  if (vista === 'venta')     return <>{renderNavbar()}<PropiedadesVenta /></>;
-  if (vista === 'renta')     return <>{renderNavbar()}<PropiedadesRenta /></>;
+  if (vista === 'venta')     return <>{renderNavbar()}<PropiedadesVenta onVerPropiedad={irAPropiedad} /></>;
+  if (vista === 'renta')     return <>{renderNavbar()}<PropiedadesRenta onVerPropiedad={irAPropiedad} /></>;
+  if (vista === 'propiedad') return <>{renderNavbar()}<VerPropiedad propiedadId={propiedadSeleccionada} onVolver={volverDePropiedad} /></>;
   if (vista === 'servicios') return <>{renderNavbar()}<ServiciosVirales onIrLogin={() => setVista('login')} /></>;
   if (vista === 'vendedor')  return <>{renderNavbar()}<Vendedor onVolver={() => setVista('home')} /></>;
 
