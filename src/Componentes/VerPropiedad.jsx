@@ -219,21 +219,28 @@ export default function VerPropiedad({ propiedadId, onVolver, tipoOrigen }) {
             <h2 className="vp-section-title">{t('vp_ubicacion_title')}</h2>
             <div className="vp-map">
               {propiedad.mapa_url ? (
-                <iframe
-                  src={propiedad.mapa_url}
-                  title="Mapa"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              ) : (
-                <div className="vp-map-placeholder">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                  {propiedad.ubicacion}
-                </div>
-              )}
+  <iframe
+    src={propiedad.mapa_url}
+    title="Mapa"
+    loading="lazy"
+    referrerPolicy="no-referrer-when-downgrade"
+  />
+) : propiedad.lat && propiedad.lng ? (
+  <iframe
+    src={`https://www.openstreetmap.org/export/embed.html?bbox=${propiedad.lng - 0.002},${propiedad.lat - 0.002},${propiedad.lng + 0.002},${propiedad.lat + 0.002}&layer=mapnik&marker=${propiedad.lat},${propiedad.lng}`}
+    title="Mapa"
+    loading="lazy"
+    style={{ border: 0 }}
+  />
+) : (
+  <div className="vp-map-placeholder">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+    {propiedad.ubicacion}
+  </div>
+)}
             </div>
           </div>
         </div>

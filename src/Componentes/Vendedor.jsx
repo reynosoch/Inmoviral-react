@@ -36,6 +36,194 @@ function useNominatim() {
   return { query, results, loading, open, search, setOpen, clear };
 }
 
+// ── MapaPicker: mapa interactivo con marcador arrastrable ─────────────────────
+function MapaPicker({ lat, lng, onChange, onConfirm, confirmed }) {
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markerRef = useRef(null);
+  const containerId = useRef(`map-${Math.random().toString(36).slice(2)}`);
+
+  // Reverse geocoding: dada una lat/lng obtiene los campos de dirección
+  const reverseGeocode = useCallback(async (lat, lng) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lng}`,
+        { headers: { 'Accept-Language': 'es', 'User-Agent': 'InmoViral/1.0' } }
+      );
+      const data = await res.json();
+      if (data && data.address) {
+        const a = data.address;
+        return {
+          calle:   [a.road, a.house_number].filter(Boolean).join(' ') || '',
+          colonia: a.suburb || a.neighbourhood || a.quarter || '',
+          ciudad:  a.city || a.town || a.village || a.municipality || '',
+          estado:  a.state || '',
+          cp:      a.postcode || '',
+          pais:    a.country || '',
+          busqueda: data.display_name || '',
+        };
+      }
+    } catch { /* silencioso */ }
+    return null;
+  }, []);
+
+  useEffect(() => {
+    // Cargar Leaflet dinámicamente si no está ya cargado
+    const loadLeaflet = async () => {
+      if (!window.L) {
+        // Inyectar CSS de Leaflet
+        if (!document.getElementById('leaflet-css')) {
+          const link = document.createElement('link');
+          link.id = 'leaflet-css';
+          link.rel = 'stylesheet';
+          link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+          document.head.appendChild(link);
+        }
+        // Inyectar JS de Leaflet
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
+      const L = window.L;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+
+      const initLat = lat || 23.6345;
+      const initLng = lng || -102.5528;
+      const initZoom = lat ? 16 : 5;
+
+      const map = L.map(containerId.current).setView([initLat, initLng], initZoom);
+      mapInstanceRef.current = map;
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Icono personalizado
+      const makeIcon = (active) => L.divIcon({
+        className: '',
+        html: `<div style="
+          width:32px;height:32px;
+          background:${active ? '#b8966a' : '#888'};
+          border:3px solid #fff;
+          border-radius:50% 50% 50% 0;
+          transform:rotate(-45deg);
+          box-shadow:0 2px 8px rgba(0,0,0,0.35);
+          transition: background 0.3s;
+        "></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+      });
+
+      const marker = L.marker([initLat, initLng], { draggable: true, icon: makeIcon(false) }).addTo(map);
+      markerRef.current = marker;
+
+      const handlePosChange = async (newLat, newLng) => {
+        marker.setIcon(makeIcon(true));
+        onChange(newLat, newLng);
+        const addr = await reverseGeocode(newLat, newLng);
+        onConfirm(newLat, newLng, addr);
+      };
+
+      marker.on('dragend', () => {
+        const pos = marker.getLatLng();
+        handlePosChange(pos.lat, pos.lng);
+      });
+
+      map.on('click', (e) => {
+        marker.setLatLng(e.latlng);
+        handlePosChange(e.latlng.lat, e.latlng.lng);
+      });
+    };
+
+    loadLeaflet();
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []); // Solo montar una vez
+
+  // Actualizar posición si lat/lng cambia externamente (nueva búsqueda Nominatim)
+  useEffect(() => {
+    if (mapInstanceRef.current && markerRef.current && lat && lng) {
+      markerRef.current.setLatLng([lat, lng]);
+      mapInstanceRef.current.setView([lat, lng], 16);
+    }
+  }, [lat, lng]);
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div
+        id={containerId.current}
+        ref={mapRef}
+        style={{
+          width: '100%',
+          height: '280px',
+          borderRadius: '10px',
+          border: confirmed
+            ? '1.5px solid var(--vd-gold, #b8966a)'
+            : '1.5px solid rgba(220,80,80,0.45)',
+          overflow: 'hidden',
+          zIndex: 0,
+          transition: 'border-color 0.3s',
+        }}
+      />
+      {/* Overlay de instrucción cuando aún no se ha confirmado */}
+      {!confirmed && (
+        <div style={{
+          position: 'absolute',
+          bottom: '10px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(13,13,11,0.88)',
+          border: '1px solid rgba(220,80,80,0.4)',
+          color: '#e08a8a',
+          fontSize: '0.62rem',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          padding: '0.5rem 1rem',
+          pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+          zIndex: 1000,
+        }}>
+          📍 Toca el mapa o arrastra el pin para confirmar tu ubicación
+        </div>
+      )}
+      {confirmed && (
+        <div style={{
+          position: 'absolute',
+          bottom: '10px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(13,13,11,0.88)',
+          border: '1px solid rgba(184,150,106,0.4)',
+          color: 'var(--vd-gold, #b8966a)',
+          fontSize: '0.62rem',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          padding: '0.5rem 1rem',
+          pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+          zIndex: 1000,
+        }}>
+          ✓ Ubicación confirmada
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Counter (Recámaras / Baños / Estacionamientos) ────────────────────────────
 function Counter({ label, value, onChange, min = 0, max = 10 }) {
   return (
@@ -106,6 +294,8 @@ export default function Vendedor({ onVolver }) {
   const [enviando, setEnviando] = useState(false);
   const [errorEnvio, setErrorEnvio] = useState('');
   const [progresoSubida, setProgresoSubida] = useState('');
+  // El usuario debe mover/hacer click en el mapa para confirmar la ubicación
+  const [mapaPinConfirmado, setMapaPinConfirmado] = useState(false);
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, []);
   useEffect(() => { document.getElementById('publicar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [step]);
@@ -149,6 +339,8 @@ export default function Vendedor({ onVolver }) {
       busqueda, calle, colonia, ciudad, estado, cp, pais,
       lat: place.lat || '', lng: place.lon || '',
     }));
+    // El pin se posiciona automáticamente, contar como confirmado
+    if (place.lat && place.lon) setMapaPinConfirmado(true);
     nom.clear();
   };
 
@@ -185,7 +377,7 @@ export default function Vendedor({ onVolver }) {
   // ── Validación por paso ──
   const canNext = () => {
     if (step === 1) {
-      return form.tipo && form.operacion && (form.calle || form.ciudad) && form.antiguedad;
+      return form.tipo && form.operacion && form.antiguedad && mapaPinConfirmado;
     }
     if (step === 2) {
       return form.titulo.trim() && form.precio.trim() && form.descripcion.trim() && fotos.length >= 3;
@@ -431,6 +623,7 @@ export default function Vendedor({ onVolver }) {
                             <button type="button" className="vd-search-clear" onClick={() => {
                               nom.clear();
                               setForm(prev => ({ ...prev, busqueda:'', calle:'', colonia:'', ciudad:'', estado:'', cp:'', pais:'', lat:'', lng:'' }));
+                              setMapaPinConfirmado(false);
                             }}>✕</button>
                           )}
                         </div>
@@ -477,6 +670,50 @@ export default function Vendedor({ onVolver }) {
                         <label>CP</label>
                         <input type="text" value={form.cp} onChange={e => set('cp', e.target.value)} placeholder="00000" />
                       </div>
+                    </div>
+
+                    {/* ── MAPA DE UBICACIÓN — siempre visible ── */}
+                    <div className="vd-field vd-full">
+                      <label>{t('vd_f_mapa', { defaultValue: 'Confirma la ubicación en el mapa' })}</label>
+                      <p className="vw-sub-text" style={{ marginBottom: '8px', fontSize: '12px', color: 'var(--color-text-muted, #888)' }}>
+                        {t('vd_f_mapa_sub', { defaultValue: 'Toca el mapa o arrastra el pin para marcar la ubicación exacta de tu propiedad. Este paso es obligatorio.' })}
+                      </p>
+                      <MapaPicker
+                        lat={form.lat ? parseFloat(form.lat) : null}
+                        lng={form.lng ? parseFloat(form.lng) : null}
+                        confirmed={mapaPinConfirmado}
+                        onChange={(lat, lng) => setForm(prev => ({ ...prev, lat: String(lat), lng: String(lng) }))}
+                        onConfirm={(lat, lng, addr) => {
+                          setMapaPinConfirmado(true);
+                          setForm(prev => ({
+                            ...prev,
+                            lat: String(lat),
+                            lng: String(lng),
+                            // Solo autocompleta campos que estén vacíos
+                            calle:   prev.calle   || (addr?.calle   ?? ''),
+                            colonia: prev.colonia || (addr?.colonia ?? ''),
+                            ciudad:  prev.ciudad  || (addr?.ciudad  ?? ''),
+                            estado:  prev.estado  || (addr?.estado  ?? ''),
+                            cp:      prev.cp      || (addr?.cp      ?? ''),
+                            pais:    prev.pais    || (addr?.pais    ?? ''),
+                            busqueda: prev.busqueda || (addr?.busqueda ?? ''),
+                          }));
+                        }}
+                      />
+                      {!mapaPinConfirmado && (
+                        <div style={{
+                          marginTop: '6px',
+                          fontSize: '0.62rem',
+                          color: '#e08a8a',
+                          letterSpacing: '0.08em',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                        }}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                          Debes seleccionar la ubicación en el mapa para continuar
+                        </div>
+                      )}
                     </div>
 
                     {/* Recámaras / Baños / Estacionamientos */}
