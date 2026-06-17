@@ -41,7 +41,10 @@ function MapaPicker({ lat, lng, onChange, onConfirm, confirmed }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
+  const wrapperRef = useRef(null);
   const containerId = useRef(`map-${Math.random().toString(36).slice(2)}`);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const internalChange = useRef(false);
 
   // Reverse geocoding: dada una lat/lng obtiene los campos de dirección
   const reverseGeocode = useCallback(async (lat, lng) => {
@@ -95,9 +98,9 @@ function MapaPicker({ lat, lng, onChange, onConfirm, confirmed }) {
         mapInstanceRef.current = null;
       }
 
-      const initLat = lat || 23.6345;
-      const initLng = lng || -102.5528;
-      const initZoom = lat ? 16 : 5;
+      const initLat = lat || 28.6353;
+      const initLng = lng || -106.0889;
+      const initZoom = lat ? 16 : 12;
 
       const map = L.map(containerId.current).setView([initLat, initLng], initZoom);
       mapInstanceRef.current = map;
@@ -128,6 +131,7 @@ function MapaPicker({ lat, lng, onChange, onConfirm, confirmed }) {
 
       const handlePosChange = async (newLat, newLng) => {
         marker.setIcon(makeIcon(true));
+        internalChange.current = true;
         onChange(newLat, newLng);
         const addr = await reverseGeocode(newLat, newLng);
         onConfirm(newLat, newLng, addr);
@@ -156,21 +160,57 @@ function MapaPicker({ lat, lng, onChange, onConfirm, confirmed }) {
 
   // Actualizar posición si lat/lng cambia externamente (nueva búsqueda Nominatim)
   useEffect(() => {
+    if (internalChange.current) {
+      internalChange.current = false;
+      return;
+    }
     if (mapInstanceRef.current && markerRef.current && lat && lng) {
       markerRef.current.setLatLng([lat, lng]);
       mapInstanceRef.current.setView([lat, lng], 16);
     }
   }, [lat, lng]);
 
+  // Ajustar tamaño del mapa al cambiar a/desde pantalla completa
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      setTimeout(() => mapInstanceRef.current.invalidateSize(), 100);
+    }
+  }, [isFullscreen]);
+
+  // Cerrar pantalla completa con tecla ESC
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const onKeyDown = (e) => { if (e.key === 'Escape') setIsFullscreen(false); };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isFullscreen]);
+
   return (
-    <div style={{ position: 'relative' }}>
+    <div
+      ref={wrapperRef}
+      style={
+        isFullscreen
+          ? {
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100vw',
+              height: '100vh',
+              zIndex: 9999,
+              background: '#0d0d0b',
+            }
+          : { position: 'relative' }
+      }
+    >
       <div
         id={containerId.current}
         ref={mapRef}
         style={{
           width: '100%',
-          height: '280px',
-          borderRadius: '10px',
+          height: isFullscreen ? '100%' : '280px',
+          borderRadius: isFullscreen ? 0 : '10px',
           border: confirmed
             ? '1.5px solid var(--vd-gold, #b8966a)'
             : '1.5px solid rgba(220,80,80,0.45)',
@@ -179,6 +219,41 @@ function MapaPicker({ lat, lng, onChange, onConfirm, confirmed }) {
           transition: 'border-color 0.3s',
         }}
       />
+
+      {/* Botón de pantalla completa */}
+      <button
+        type="button"
+        onClick={() => setIsFullscreen(f => !f)}
+        aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+        style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          zIndex: 1001,
+          width: '34px',
+          height: '34px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'rgba(13,13,11,0.85)',
+          border: '1px solid rgba(184,150,106,0.4)',
+          borderRadius: '8px',
+          color: 'var(--vd-gold, #b8966a)',
+          cursor: 'pointer',
+          padding: 0,
+        }}
+      >
+        {isFullscreen ? (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+            <path d="M9 9 4 4M9 9H4m0-5v5m11 0 5-5m-5 5h5m0 5v-5M15 15l5 5m-5-5h5m0 5v-5M9 15l-5 5m5-5H4m0 5v-5" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m11-5v3a2 2 0 0 0-2 2h-3" />
+          </svg>
+        )}
+      </button>
+
       {/* Overlay de instrucción cuando aún no se ha confirmado */}
       {!confirmed && (
         <div style={{
@@ -689,14 +764,14 @@ export default function Vendedor({ onVolver }) {
                             ...prev,
                             lat: String(lat),
                             lng: String(lng),
-                            // Solo autocompleta campos que estén vacíos
-                            calle:   prev.calle   || (addr?.calle   ?? ''),
-                            colonia: prev.colonia || (addr?.colonia ?? ''),
-                            ciudad:  prev.ciudad  || (addr?.ciudad  ?? ''),
-                            estado:  prev.estado  || (addr?.estado  ?? ''),
-                            cp:      prev.cp      || (addr?.cp      ?? ''),
-                            pais:    prev.pais    || (addr?.pais    ?? ''),
-                            busqueda: prev.busqueda || (addr?.busqueda ?? ''),
+                            // Actualiza los campos de dirección con la nueva ubicación
+                            calle:   addr?.calle   ?? prev.calle,
+                            colonia: addr?.colonia ?? prev.colonia,
+                            ciudad:  addr?.ciudad  ?? prev.ciudad,
+                            estado:  addr?.estado  ?? prev.estado,
+                            cp:      addr?.cp      ?? prev.cp,
+                            pais:    addr?.pais    ?? prev.pais,
+                            busqueda: addr?.busqueda ?? prev.busqueda,
                           }));
                         }}
                       />

@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   const signUp = (email, password) => supabase.auth.signUp({ email, password });
   const signOut = () => supabase.auth.signOut();
 
-  // 🌟 Usamos React.createElement en lugar de JSX para que Vite no truene con la extensión .js
+  //  Usamos React.createElement en lugar de JSX para que Vite no truene con la extensión .js
   return React.createElement(
     AuthContext.Provider,
     { value: { user, loading, signIn, signUp, signOut } },
