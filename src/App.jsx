@@ -6,6 +6,7 @@ import VerPropiedad from './Componentes/VerPropiedad.jsx';
 import ServiciosVirales from './Componentes/ServiciosVirales.jsx';
 import SobreNosotros from './Componentes/SobreNosotros.jsx';
 import Vendedor from './Componentes/Vendedor.jsx';
+import UserMenu from './Componentes/UserMenu.jsx';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './AuthContext.js';
 import { supabase } from './supabaseClient'; 
@@ -15,6 +16,7 @@ function App() {
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth(); 
   const [vista, setVista] = useState('home');
+  const [menuAbierto, setMenuAbierto] = useState(false);
   const [propiedadSeleccionada, setPropiedadSeleccionada] = useState(null);
   const [propiedades, setPropiedades] = useState([]); 
   const rafRef = useRef(null);
@@ -197,32 +199,24 @@ function App() {
         )}
 
         {user ? (
-          <div className="nav-user-menu" tabIndex={0}
-            onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('open'); }}
-          >
-            <button className="nav-user-btn" onClick={(e) => e.currentTarget.closest('.nav-user-menu').classList.toggle('open')}>
-              <span className="nav-avatar">
-                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="16" cy="16" r="16" fill="rgba(160,120,64,0.15)"/>
-                  <circle cx="16" cy="12" r="5" fill="#A07840" opacity="0.8"/>
-                  <path d="M6 26c0-5.523 4.477-10 10-10s10 4.477 10 10" fill="#A07840" opacity="0.5"/>
-                </svg>
-              </span>
-              <span className="nav-user-name">
-                {user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ')[0] : user.email?.split('@')[0]}
-              </span>
-              <svg className="nav-chevron" viewBox="0 0 10 6" fill="none">
-                <path d="M1 1l4 4 4-4" stroke="#A07840" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span className="nav-avatar">
+              <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="16" fill="rgba(160,120,64,0.15)"/>
+                <circle cx="16" cy="12" r="5" fill="#A07840" opacity="0.8"/>
+                <path d="M6 26c0-5.523 4.477-10 10-10s10 4.477 10 10" fill="#A07840" opacity="0.5"/>
               </svg>
+            </span>
+            <button
+              className={`nav-ham-btn ${menuAbierto ? 'open' : ''}`}
+              onClick={() => setMenuAbierto(true)}
+              aria-label={i18n.language.startsWith('es') ? 'Abrir menú' : 'Open menu'}
+              aria-expanded={menuAbierto}
+            >
+              <span className="nav-ham-line" />
+              <span className="nav-ham-line" />
+              <span className="nav-ham-line" />
             </button>
-            <div className="nav-dropdown">
-              <button className="nav-dropdown-item" onClick={() => signOut()}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
-                {i18n.language.startsWith('es') ? 'Cerrar Sesión' : 'Sign Out'}
-              </button>
-            </div>
           </div>
         ) : (
           <button onClick={() => setVista('login')} className="nav-cta">
@@ -238,17 +232,30 @@ function App() {
     </nav>
   );
 
+  const renderUserMenu = () => (
+    <UserMenu
+      open={menuAbierto}
+      onClose={() => setMenuAbierto(false)}
+      user={user}
+      vista={vista}
+      setVista={setVista}
+      signOut={signOut}
+      idiomaEs={i18n.language.startsWith('es')}
+    />
+  );
+
   // ══ REDIRECCIONES DE VISTAS ══
-  if (vista === 'venta')     return <>{renderNavbar()}<PropiedadesVenta onVerPropiedad={irAPropiedad} /></>;
-  if (vista === 'renta')     return <>{renderNavbar()}<PropiedadesRenta onVerPropiedad={irAPropiedad} /></>;
-  if (vista === 'propiedad') return <>{renderNavbar()}<VerPropiedad propiedadId={propiedadSeleccionada} onVolver={volverDePropiedad} /></>;
-  if (vista === 'servicios') return <>{renderNavbar()}<ServiciosVirales onIrLogin={() => setVista('login')} /></>;
-  if (vista === 'vendedor')  return <>{renderNavbar()}<Vendedor onVolver={() => setVista('home')} /></>;
+  if (vista === 'venta')     return <>{renderNavbar()}{renderUserMenu()}<PropiedadesVenta onVerPropiedad={irAPropiedad} /></>;
+  if (vista === 'renta')     return <>{renderNavbar()}{renderUserMenu()}<PropiedadesRenta onVerPropiedad={irAPropiedad} /></>;
+  if (vista === 'propiedad') return <>{renderNavbar()}{renderUserMenu()}<VerPropiedad propiedadId={propiedadSeleccionada} onVolver={volverDePropiedad} /></>;
+  if (vista === 'servicios') return <>{renderNavbar()}{renderUserMenu()}<ServiciosVirales onIrLogin={() => setVista('login')} /></>;
+  if (vista === 'vendedor')  return <>{renderNavbar()}{renderUserMenu()}<Vendedor onVolver={() => setVista('home')} /></>;
 
   if (vista === 'nosotros') {
     return (
       <>
         {renderNavbar()}
+        {renderUserMenu()}
         <SobreNosotros 
           onIrServicios={() => setVista('servicios')} 
           onIrPropiedades={() => setVista('venta')} 
@@ -261,6 +268,7 @@ function App() {
   return (
     <>
       {renderNavbar()}
+      {renderUserMenu()}
 
       {/* ══ HERO ══ */}
       <section className="hero">
