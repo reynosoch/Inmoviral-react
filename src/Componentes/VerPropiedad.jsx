@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { supabase } from '../supabaseClient';
-import './VerPropiedad.css';
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=1200&q=80&auto=format&fit=crop';
 
 // Formatea números a "85,000" sin decimales
 const formatPrecio = (num) => {
@@ -18,7 +20,6 @@ export default function VerPropiedad({ propiedadId, onVolver, tipoOrigen }) {
   const [imagenActiva, setImagenActiva] = useState(0);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     const cargar = async () => {
       setCargando(true);
       const { data, error } = await supabase
@@ -43,256 +44,557 @@ export default function VerPropiedad({ propiedadId, onVolver, tipoOrigen }) {
 
   if (cargando) {
     return (
-      <div className="vp-page">
-        <div className="vp-loading">
-          <div className="vp-spinner" />
-        </div>
-      </div>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#A07840" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (!propiedad) {
     return (
-      <div className="vp-page">
-        <div className="vp-notfound">
-          <h2>{t('vp_not_found_title')}</h2>
-          <p>{t('vp_not_found_text')}</p>
-          <button className="prop-btn" onClick={onVolver}>
-            {t('vp_back')}
-          </button>
-        </div>
-      </div>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={styles.notFoundContainer}>
+          <Text style={styles.notFoundTitle}>{t('vp_not_found_title')}</Text>
+          <Text style={styles.notFoundText}>{t('vp_not_found_text')}</Text>
+          <Pressable
+            onPress={() => onVolver && onVolver('venta')}
+            style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
+          >
+            <Text style={styles.backButtonText}>{t('vp_back')}</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     );
   }
 
   const imagenes = propiedad.imagenes?.length
     ? propiedad.imagenes
-    : ['https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=1200&q=80&auto=format&fit=crop'];
+    : [FALLBACK_IMAGE];
 
   const esRenta = propiedad.tipo_transaccion === 'Renta';
   const amenidades = propiedad.amenidades || [];
-  const extraThumbs = imagenes.length > 4 ? imagenes.length - 4 : 0;
 
   return (
-    <div className="vp-page">
-      {/* BREADCRUMB */}
-      <nav className="vp-breadcrumb">
-        <a href="#" onClick={(e) => { e.preventDefault(); onVolver && onVolver('home'); }}>{t('vp_breadcrumb_inicio')}</a>
-        <span className="sep">/</span>
-        <a href="#" onClick={(e) => { e.preventDefault(); onVolver && onVolver(esRenta ? 'renta' : 'venta'); }}>
-          {esRenta ? t('vp_breadcrumb_renta') : t('vp_breadcrumb_venta')}
-        </a>
-        <span className="sep">/</span>
-        <span className="current">{propiedad.titulo}</span>
-      </nav>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* IMAGEN PRINCIPAL */}
+        <View style={styles.galleryMain}>
+          <Image
+            source={{ uri: imagenes[imagenActiva] }}
+            style={styles.mainImage}
+            resizeMode="cover"
+          />
+          
+          {/* BADGE TIPO */}
+          <View style={[styles.badge, esRenta ? styles.badgeRenta : styles.badgeVenta]}>
+            <Text style={styles.badgeText}>
+              {esRenta ? t('props_badge_renta') : t('props_badge_venta')}
+            </Text>
+          </View>
 
-      {/* GALERÍA */}
-      <section className="vp-gallery">
-        <div className="vp-gallery-main">
-          <img src={imagenes[imagenActiva]} alt={propiedad.titulo} />
-          <span className={`prop-badge ${esRenta ? 'renta' : 'venta'}`}>
-            {esRenta ? t('props_badge_renta') : t('props_badge_venta')}
-          </span>
-          <button
-            className={`vp-fav-btn ${favorito ? 'active' : ''}`}
-            onClick={() => setFavorito(!favorito)}
-            aria-label={t('vp_favorito')}
+          {/* BOTÓN FAVORITO */}
+          <Pressable
+            onPress={() => setFavorito(!favorito)}
+            style={({ pressed }) => [styles.favButton, pressed && styles.favButtonPressed]}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="2">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-            </svg>
-          </button>
-        </div>
-        <div className="vp-gallery-thumbs-wrap">
-          {imagenes.slice(1, 5).map((img, idx) => (
-            <div
-              key={idx}
-              className={`vp-gallery-thumb ${idx === 3 && extraThumbs > 0 ? 'has-extra' : ''}`}
-              data-extra={`+${extraThumbs}`}
-              onClick={() => setImagenActiva(idx + 1)}
-              style={{ cursor: 'pointer' }}
-            >
-              <img src={img} alt={`${propiedad.titulo} ${idx + 2}`} />
-            </div>
-          ))}
-        </div>
-      </section>
+            <Text style={styles.favButtonText}>{favorito ? '❤️' : '🤍'}</Text>
+          </Pressable>
 
-      {/* CONTENIDO PRINCIPAL */}
-      <div className="vp-main">
-        <div className="vp-content">
+          {/* BOTÓN VOLVER */}
+          <Pressable
+            onPress={() => onVolver && onVolver(esRenta ? 'renta' : 'venta')}
+            style={({ pressed }) => [styles.backButtonTop, pressed && styles.backButtonTopPressed]}
+          >
+            <Text style={styles.backButtonTopText}>{'←'}</Text>
+          </Pressable>
+        </View>
 
-          {/* HEADER */}
-          <div className="vp-header">
-            <div>
-              <div className="vp-eyebrow">{t('vp_eyebrow')}</div>
-              <h1 className="vp-title">{propiedad.titulo}</h1>
-              <p className="vp-location">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                {propiedad.ubicacion}
-              </p>
-            </div>
-            <div className="vp-price-block">
-              <div className="vp-price">
-                ${formatPrecio(propiedad.precio)}
-                <span>{esRenta ? t('props_per_month') : t('vp_precio_total')}</span>
-              </div>
-            </div>
-          </div>
+        {/* THUMBNAILS */}
+        {imagenes.length > 1 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbsContainer}>
+            {imagenes.map((img, idx) => (
+              <Pressable
+                key={idx}
+                onPress={() => setImagenActiva(idx)}
+                style={[styles.thumb, imagenActiva === idx && styles.thumbActive]}
+              >
+                <Image source={{ uri: img }} style={styles.thumbImage} resizeMode="cover" />
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
 
-          {/* SPECS */}
-          <div className="vp-specs">
-            <div className="vp-spec">
-              <div className="vp-spec-value">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M3 7v11M3 11h18v7M21 11V8a2 2 0 00-2-2H8a2 2 0 00-2 2v3" />
-                  <circle cx="7" cy="7" r="1.5" />
-                </svg>
-                {propiedad.habitaciones}
-              </div>
-              <div className="vp-spec-label">{t('props_rec')}</div>
-            </div>
-            <div className="vp-spec">
-              <div className="vp-spec-value">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M4 12h16v3a4 4 0 01-4 4H8a4 4 0 01-4-4v-3zM4 12V6a2 2 0 012-2h1M9 8h.01" />
-                  <path d="M4 19v1M18 19v1" />
-                </svg>
-                {propiedad.banos}
-              </div>
-              <div className="vp-spec-label">{t('props_banos')}</div>
-            </div>
-            <div className="vp-spec">
-              <div className="vp-spec-value">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6" />
-                </svg>
-                {propiedad.m2}
-              </div>
-              <div className="vp-spec-label">M²</div>
-            </div>
-            {propiedad.estacionamientos !== undefined && propiedad.estacionamientos !== null && (
-              <div className="vp-spec">
-                <div className="vp-spec-value">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M5 17h14M5 17a2 2 0 01-2-2v-2l2-5h14l2 5v2a2 2 0 01-2 2M5 17v2a1 1 0 001 1h1a1 1 0 001-1v-2h8v2a1 1 0 001 1h1a1 1 0 001-1v-2" />
-                    <circle cx="7.5" cy="14" r="0.5" />
-                    <circle cx="16.5" cy="14" r="0.5" />
-                  </svg>
-                  {propiedad.estacionamientos}
-                </div>
-                <div className="vp-spec-label">{t('vp_estacionamiento')}</div>
-              </div>
-            )}
-          </div>
+        {/* HEADER - TÍTULO Y PRECIO */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.eyebrow}>{t('vp_eyebrow')}</Text>
+            <Text style={styles.title}>{propiedad.titulo}</Text>
+            <View style={styles.location}>
+              <Text style={styles.locationIcon}>📍</Text>
+              <Text style={styles.locationText} numberOfLines={2}>{propiedad.ubicacion}</Text>
+            </View>
+          </View>
+          <View style={styles.priceBlock}>
+            <Text style={styles.price}>${formatPrecio(propiedad.precio)}</Text>
+            <Text style={styles.priceNote}>{esRenta ? t('props_per_month') : t('vp_precio_total')}</Text>
+          </View>
+        </View>
 
-          {/* DESCRIPCIÓN */}
-          <div className="vp-section">
-            <h2 className="vp-section-title">{t('vp_descripcion_title')}</h2>
-            <p className="vp-description">
-              {propiedad.descripcion || t('vp_descripcion_default')}
-            </p>
-          </div>
+        {/* SPECS GRID */}
+        <View style={styles.specsGrid}>
+          <View style={styles.specItem}>
+            <Text style={styles.specIcon}>🛏</Text>
+            <Text style={styles.specValue}>{propiedad.habitaciones}</Text>
+            <Text style={styles.specLabel}>{t('props_rec')}</Text>
+          </View>
 
-          {/* AMENIDADES */}
-          {amenidades.length > 0 && (
-            <div className="vp-section">
-              <h2 className="vp-section-title">{t('vp_amenidades_title')}</h2>
-              <div className="vp-amenities">
-                {amenidades.map((am, idx) => (
-                  <div className="vp-amenity" key={idx}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20 6L9 17l-5-5" />
-                    </svg>
-                    {am}
-                  </div>
-                ))}
-              </div>
-            </div>
+          <View style={styles.specItem}>
+            <Text style={styles.specIcon}>🚿</Text>
+            <Text style={styles.specValue}>{propiedad.banos}</Text>
+            <Text style={styles.specLabel}>{t('props_banos')}</Text>
+          </View>
+
+          <View style={styles.specItem}>
+            <Text style={styles.specIcon}>📐</Text>
+            <Text style={styles.specValue}>{propiedad.m2}</Text>
+            <Text style={styles.specLabel}>m²</Text>
+          </View>
+
+          {propiedad.estacionamientos !== undefined && propiedad.estacionamientos !== null && (
+            <View style={styles.specItem}>
+              <Text style={styles.specIcon}>🚗</Text>
+              <Text style={styles.specValue}>{propiedad.estacionamientos}</Text>
+              <Text style={styles.specLabel}>{t('vp_estacionamiento')}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* DESCRIPCIÓN */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('vp_descripcion_title')}</Text>
+          <Text style={styles.description}>
+            {propiedad.descripcion || t('vp_descripcion_default')}
+          </Text>
+        </View>
+
+        {/* AMENIDADES */}
+        {amenidades.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('vp_amenidades_title')}</Text>
+            <View style={styles.amenitiesGrid}>
+              {amenidades.map((am, idx) => (
+                <View key={idx} style={styles.amenityItem}>
+                  <Text style={styles.amenityCheck}>✓</Text>
+                  <Text style={styles.amenityText}>{am}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* CONTACTO */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('vp_contact_title')}</Text>
+          <Text style={styles.contactSub}>{t('vp_contact_sub')}</Text>
+
+          {propiedad.agente_nombre && (
+            <View style={styles.agentCard}>
+              <View style={styles.agentAvatar}>
+                <Text style={styles.agentAvatarText}>
+                  {(propiedad.agente_nombre || 'A')[0].toUpperCase()}
+                </Text>
+              </View>
+              <View style={styles.agentInfo}>
+                <Text style={styles.agentName}>{propiedad.agente_nombre}</Text>
+                <Text style={styles.agentRole}>{t('vp_agente_role')}</Text>
+              </View>
+            </View>
           )}
 
-          {/* UBICACIÓN */}
-          <div className="vp-section">
-            <h2 className="vp-section-title">{t('vp_ubicacion_title')}</h2>
-            <div className="vp-map">
-              {propiedad.mapa_url ? (
-  <iframe
-    src={propiedad.mapa_url}
-    title="Mapa"
-    loading="lazy"
-    referrerPolicy="no-referrer-when-downgrade"
-  />
-) : propiedad.lat && propiedad.lng ? (
-  <iframe
-    src={`https://www.openstreetmap.org/export/embed.html?bbox=${propiedad.lng - 0.002},${propiedad.lat - 0.002},${propiedad.lng + 0.002},${propiedad.lat + 0.002}&layer=mapnik&marker=${propiedad.lat},${propiedad.lng}`}
-    title="Mapa"
-    loading="lazy"
-    style={{ border: 0 }}
-  />
-) : (
-  <div className="vp-map-placeholder">
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-    {propiedad.ubicacion}
-  </div>
-)}
-            </div>
-          </div>
-        </div>
+          <View style={styles.contactButtons}>
+            {propiedad.agente_telefono && (
+              <Pressable
+                onPress={() => {}} // En RN real, usar Linking.openURL(`tel:...`)
+                style={({ pressed }) => [styles.contactBtn, pressed && styles.contactBtnPressed]}
+              >
+                <Text style={styles.contactBtnIcon}>☎️</Text>
+                <Text style={styles.contactBtnText}>{t('vp_llamar')}</Text>
+              </Pressable>
+            )}
 
-        {/* SIDEBAR CONTACTO */}
-        <aside className="vp-sidebar">
-          <div className="vp-contact-card">
-            <h3 className="vp-contact-title">{t('vp_contact_title')}</h3>
-            <p className="vp-contact-sub">{t('vp_contact_sub')}</p>
-
-            <div className="vp-agent">
-              <div className="vp-agent-avatar">
-                {(propiedad.agente_nombre || 'A')[0].toUpperCase()}
-              </div>
-              <div className="vp-agent-info">
-                <h4>{propiedad.agente_nombre || t('vp_agente_default')}</h4>
-                <p>{t('vp_agente_role')}</p>
-              </div>
-            </div>
-
-            <form className="vp-form" onSubmit={(e) => e.preventDefault()}>
-              <input type="text" placeholder={t('vp_form_nombre')} required />
-              <input type="email" placeholder={t('vp_form_email')} required />
-              <input type="tel" placeholder={t('vp_form_telefono')} />
-              <textarea
-                placeholder={t('vp_form_mensaje')}
-                defaultValue={t('vp_form_mensaje_default', { titulo: propiedad.titulo })}
-              />
-              <button type="submit" className="vp-contact-btn">
-                {t('vp_form_enviar')}
-              </button>
-            </form>
-
-            <div className="vp-contact-divider">{t('vp_contact_o')}</div>
-
-            <div className="vp-alt-actions">
-              <button className="vp-alt-btn" onClick={() => window.open(`tel:${propiedad.agente_telefono || ''}`)}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-                </svg>
-                {t('vp_llamar')}
-              </button>
-              <button className="vp-alt-btn" onClick={() => window.open(`https://wa.me/${propiedad.agente_whatsapp || ''}`)}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
-                </svg>
-                WhatsApp
-              </button>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </div>
+            {propiedad.agente_whatsapp && (
+              <Pressable
+                onPress={() => {}} // En RN real, usar Linking.openURL(`https://wa.me/...`)
+                style={({ pressed }) => [styles.contactBtn, pressed && styles.contactBtnPressed]}
+              >
+                <Text style={styles.contactBtnIcon}>💬</Text>
+                <Text style={styles.contactBtnText}>WhatsApp</Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 32,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  notFoundContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: '#FFFFFF',
+  },
+  notFoundTitle: {
+    color: '#0F172A',
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  notFoundText: {
+    color: '#64748B',
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  backButton: {
+    backgroundColor: '#3B82F6',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 10,
+  },
+  backButtonPressed: {
+    opacity: 0.88,
+  },
+  backButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  galleryMain: {
+    position: 'relative',
+    width: '100%',
+    height: 300,
+    backgroundColor: '#E2E8F0',
+    overflow: 'hidden',
+  },
+  mainImage: {
+    width: '100%',
+    height: '100%',
+  },
+  badge: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  badgeVenta: {
+    backgroundColor: '#DC2626',
+  },
+  badgeRenta: {
+    backgroundColor: '#16A34A',
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  favButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  favButtonPressed: {
+    opacity: 0.85,
+  },
+  favButtonText: {
+    fontSize: 24,
+  },
+  backButtonTop: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  backButtonTopPressed: {
+    opacity: 0.85,
+  },
+  backButtonTopText: {
+    fontSize: 20,
+    color: '#0F172A',
+    fontWeight: '600',
+  },
+  thumbsContainer: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    backgroundColor: '#FAFAF8',
+  },
+  thumb: {
+    width: 70,
+    height: 70,
+    marginHorizontal: 4,
+    borderRadius: 10,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+  },
+  thumbActive: {
+    borderColor: '#A07840',
+  },
+  thumbImage: {
+    width: '100%',
+    height: '100%',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  headerLeft: {
+    flex: 1,
+    marginRight: 16,
+  },
+  eyebrow: {
+    color: '#A07840',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  title: {
+    color: '#0F172A',
+    fontSize: 24,
+    fontWeight: '700',
+    lineHeight: 28,
+    marginBottom: 12,
+  },
+  location: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  locationIcon: {
+    fontSize: 14,
+    marginRight: 6,
+  },
+  locationText: {
+    flex: 1,
+    color: '#64748B',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  priceBlock: {
+    alignItems: 'flex-end',
+  },
+  price: {
+    color: '#2563EB',
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  priceNote: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  specsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    backgroundColor: '#F9FAFB',
+    gap: 12,
+  },
+  specItem: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  specIcon: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+  specValue: {
+    color: '#0F172A',
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  specLabel: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  section: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  sectionTitle: {
+    color: '#0F172A',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
+    letterSpacing: -0.2,
+  },
+  description: {
+    color: '#475569',
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  amenitiesGrid: {
+    flexDirection: 'column',
+    gap: 10,
+  },
+  amenityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  amenityCheck: {
+    fontSize: 18,
+    color: '#16A34A',
+    marginRight: 12,
+    fontWeight: '700',
+  },
+  amenityText: {
+    flex: 1,
+    color: '#475569',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  contactSub: {
+    color: '#64748B',
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  agentCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginBottom: 16,
+    borderRadius: 12,
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 12,
+  },
+  agentAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#A07840',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  agentAvatarText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  agentInfo: {
+    flex: 1,
+  },
+  agentName: {
+    color: '#0F172A',
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  agentRole: {
+    color: '#64748B',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  contactButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  contactBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: '#3B82F6',
+    gap: 6,
+  },
+  contactBtnPressed: {
+    opacity: 0.88,
+  },
+  contactBtnIcon: {
+    fontSize: 16,
+  },
+  contactBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+});

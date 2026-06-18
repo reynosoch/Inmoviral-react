@@ -1,8 +1,1068 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext.js';
-import './Vendedor.css';
+
+// ── Counter component ────────────────────────────────────────────────────
+function Counter({ label, value, onChange, min = 0, max = 10 }) {
+  return (
+    <View style={styles.counterField}>
+      <Text style={styles.counterLabel}>{label}</Text>
+      <View style={styles.counterRow}>
+        <Pressable
+          onPress={() => onChange(Math.max(min, value - 1))}
+          style={({ pressed }) => [styles.counterBtn, pressed && styles.counterBtnPressed]}
+        >
+          <Text style={styles.counterBtnText}>−</Text>
+        </Pressable>
+        <Text style={styles.counterValue}>{value}</Text>
+        <Pressable
+          onPress={() => onChange(Math.min(max, value + 1))}
+          style={({ pressed }) => [styles.counterBtn, pressed && styles.counterBtnPressed]}
+        >
+          <Text style={styles.counterBtnText}>+</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+// ── Quick selector for tipo/operación ────────────────────────────────────
+function OptionSelector({ label, options, value, onChange }) {
+  return (
+    <View style={styles.fieldGroup}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <View style={styles.optionGrid}>
+        {options.map(opt => (
+          <Pressable
+            key={opt}
+            onPress={() => onChange(opt)}
+            style={[
+              styles.optionButton,
+              value === opt && styles.optionButtonActive
+            ]}
+          >
+            <Text style={[styles.optionText, value === opt && styles.optionTextActive]}>
+              {opt}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+export default function Vendedor({ onVolver }) {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState({
+    tipo: '',
+    operacion: '',
+    calle: '',
+    colonia: '',
+    ciudad: '',
+    estado: '',
+    cp: '',
+    pais: 'México',
+    lat: '',
+    lng: '',
+    recamaras: 1,
+    banos: 1,
+    estacionamientos: 0,
+    antiguedad: '',
+    titulo: '',
+    precio: '',
+    superficie: '',
+    descripcion: '',
+    amenidades: [],
+    servicios: [],
+    nombre: '',
+    telefono: '',
+  });
+
+  const [fotos, setFotos] = useState([]);
+  const [enviado, setEnviado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [errorEnvio, setErrorEnvio] = useState('');
+  const [progresoSubida, setProgresoSubida] = useState('');
+
+  // Pre-fill nombre/teléfono si el usuario está autenticado
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        nombre: prev.nombre || user.user_metadata?.full_name || '',
+        telefono: prev.telefono || user.user_metadata?.phone || '',
+      }));
+    }
+  }, [user]);
+
+  const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+  // ── Funciones de fotos con Expo ImagePicker ──
+  const pickImages = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const espacio = 15 - fotos.length;
+      const nuevas = result.assets.slice(0, espacio).map((asset, i) => ({
+        id: `${asset.uri}-${i}`,
+        uri: asset.uri,
+        filename: asset.filename || `photo_${i}.jpg`,
+      }));
+      setFotos(prev => [...prev, ...nuevas]);
+    }
+  };
+
+  const removeFoto = (id) => {
+    setFotos(prev => prev.filter(f => f.id !== id));
+  };
+
+  // ── Toggle amenidades/servicios ──
+  const toggleAmenidad = (k) =>
+    setForm(prev => ({
+      ...prev,
+      amenidades: prev.amenidades.includes(k)
+        ? prev.amenidades.filter(a => a !== k)
+        : [...prev.amenidades, k],
+    }));
+
+  const toggleServicio = (k) =>
+    setForm(prev => ({
+      ...prev,
+      servicios: prev.servicios.includes(k)
+        ? prev.servicios.filter(s => s !== k)
+        : [...prev.servicios, k],
+    }));
+
+  // ── Validación por paso ──
+  const canNext = () => {
+    if (step === 1) {
+      return form.tipo && form.operacion && form.antiguedad && form.city;
+    }
+    if (step === 2) {
+      return (
+        form.titulo.trim() &&
+        form.precio.trim() &&
+        form.descripcion.trim() &&
+        fotos.length >= 3
+      );
+    }
+    return true;
+  };
+
+  // ── Submit handler ──
+  const handleSubmit = async () => {
+    if (step < 4) {
+      if (canNext()) setStep(s => s + 1);
+      return;
+    }
+
+    setErrorEnvio('');
+    setEnviando(true);
+
+    try {
+      // Construir ubicación legible
+      const ubicacion = [form.colonia, form.ciudad, form.estado]
+        .filter(Boolean)
+        .join(', ');
+
+      // Mapear operación -> tipo_transaccion
+      let tipoTransaccion = 'Venta';
+      if (form.operacion === 'Renta') tipoTransaccion = 'Renta';
+      else if (form.operacion === 'Ambas') tipoTransaccion = 'Venta';
+
+      // Limpiar precio
+      const precioNumerico =
+        parseFloat(String(form.precio).replace(/[^\d.]/g, '')) || 0;
+
+      // Subir fotos
+      const urlsImagenes = [];
+      for (let i = 0; i < fotos.length; i++) {
+        setProgresoSubida(
+          t('vw_subiendo_foto', {
+            current: i + 1,
+            total: fotos.length,
+            defaultValue: `Subiendo foto ${i + 1} de ${fotos.length}...`,
+          })
+        );
+
+        const foto = fotos[i];
+        const ext = foto.filename.split('.').pop();
+        const path = `${user?.id || 'anonimo'}/${Date.now()}_${i}.${ext}`;
+
+        // Leer la imagen como blob
+        const response = await fetch(foto.uri);
+        const blob = await response.blob();
+
+        const { error: uploadError } = await supabase.storage
+          .from('propiedades')
+          .upload(path, blob, { cacheControl: '3600', upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('propiedades')
+          .getPublicUrl(path);
+
+        urlsImagenes.push(publicUrlData.publicUrl);
+      }
+      setProgresoSubida('');
+
+      // Insertar propiedad
+      const nuevaPropiedad = {
+        user_id: user?.id || null,
+        propietario_id: user?.id || null,
+        titulo: form.titulo,
+        tipo_transaccion: tipoTransaccion,
+        operacion: form.operacion,
+        tipo_inmueble: form.tipo,
+        precio: precioNumerico,
+        ubicacion,
+        calle: form.calle,
+        colonia: form.colonia,
+        ciudad: form.ciudad,
+        estado: form.estado,
+        cp: form.cp,
+        pais: form.pais,
+        lat: form.lat ? parseFloat(form.lat) : null,
+        lng: form.lng ? parseFloat(form.lng) : null,
+        habitaciones: form.recamaras,
+        banos: form.banos,
+        estacionamientos: form.estacionamientos,
+        antiguedad: form.antiguedad,
+        m2: form.superficie
+          ? parseFloat(String(form.superficie).replace(/[^\d.]/g, ''))
+          : null,
+        descripcion: form.descripcion,
+        amenidades: form.amenidades,
+        servicios_solicitados: form.servicios,
+        imagenes: urlsImagenes,
+        nombre_contacto: form.nombre,
+        telefono_contacto: form.telefono,
+        estatus: 'pendiente',
+      };
+
+      const { error: insertError } = await supabase
+        .from('propiedades')
+        .insert([nuevaPropiedad]);
+
+      if (insertError) throw insertError;
+
+      setEnviado(true);
+    } catch (err) {
+      console.error('Error al publicar propiedad:', err);
+      setErrorEnvio(
+        err.message ||
+        t('vw_error_publicar', {
+          defaultValue: 'Ocurrió un error al publicar tu propiedad. Intenta de nuevo.',
+        })
+      );
+    } finally {
+      setEnviando(false);
+      setProgresoSubida('');
+    }
+  };
+
+  const AMENIDADES_KEYS = Array.from({ length: 12 }, (_, i) => `vw_am_${i + 1}`);
+  const SERVICIOS = [
+    { key: 'mudanza', label: t('vw_srv1_title', { defaultValue: 'Mudanza' }) },
+    { key: 'redes', label: t('vw_srv2_title', { defaultValue: 'Redes' }) },
+    { key: 'fotografia', label: t('vw_srv3_title', { defaultValue: 'Fotografía' }) },
+    { key: 'asesor', label: t('vw_srv4_title', { defaultValue: 'Asesor' }) },
+  ];
+
+  if (enviado) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={styles.successContainer}>
+          <Text style={styles.successIcon}>✓</Text>
+          <Text style={styles.successTitle}>{t('vw_publicado_msg', { defaultValue: '¡Propiedad publicada!' })}</Text>
+          <Text style={styles.successText}>
+            {t('vw_publicado_anonimo', {
+              defaultValue: 'Tu propiedad ha sido publicada correctamente.',
+            })}
+          </Text>
+          <Pressable
+            onPress={onVolver}
+            style={({ pressed }) => [styles.successButton, pressed && styles.successButtonPressed]}
+          >
+            <Text style={styles.successButtonText}>{t('vw_volver', { defaultValue: 'Volver' })}</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#0A0A0A" />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoid}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* HERO SECTION */}
+          <View style={styles.hero}>
+            <Text style={styles.heroOverline}>{t('vd_eyebrow', { defaultValue: 'Publicar Propiedad' })}</Text>
+            <Text style={styles.heroTitle}>
+              {t('vd_h1_1', { defaultValue: 'Publica tu' })} {'\n'}
+              {t('vd_h1_2', { defaultValue: 'propiedad' })} <Text style={styles.heroTitleEmphasis}>{t('vd_h1_em', { defaultValue: 'premium' })}</Text>
+            </Text>
+            <Text style={styles.heroSubtitle}>
+              {t('vd_hero_sub', { defaultValue: 'Llega a miles de compradores e inversionistas.' })}
+            </Text>
+          </View>
+
+          {/* PROGRESS INDICATOR */}
+          <View style={styles.progressContainer}>
+            {[1, 2, 3, 4].map(num => (
+              <View key={num} style={styles.progressStep}>
+                <View
+                  style={[
+                    styles.progressCircle,
+                    step >= num && styles.progressCircleActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.progressNum,
+                      step >= num && styles.progressNumActive,
+                    ]}
+                  >
+                    {num}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* PASO 1 */}
+          {step === 1 && (
+            <View style={styles.formContainer}>
+              <Text style={styles.formTitle}>{t('vw_step1_label', { defaultValue: 'Tipo de Propiedad' })}</Text>
+
+              <OptionSelector
+                label={t('vd_f_tipo', { defaultValue: 'Tipo' })}
+                options={['Casa', 'Departamento', 'Terreno', 'Local Comercial']}
+                value={form.tipo}
+                onChange={v => set('tipo', v)}
+              />
+
+              <OptionSelector
+                label={t('vd_f_operacion', { defaultValue: 'Operación' })}
+                options={['Venta', 'Renta', 'Ambas']}
+                value={form.operacion}
+                onChange={v => set('operacion', v)}
+              />
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>{t('vd_f_ciudad', { defaultValue: 'Ciudad' })}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ej. Ciudad de México"
+                  placeholderTextColor="#8A8A84"
+                  value={form.ciudad}
+                  onChangeText={v => set('city', v) || set('ciudad', v)}
+                />
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>{t('vd_f_estado', { defaultValue: 'Estado' })}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ej. CDMX"
+                  placeholderTextColor="#8A8A84"
+                  value={form.estado}
+                  onChangeText={v => set('estado', v)}
+                />
+              </View>
+
+              <Counter
+                label={t('vw_recamaras', { defaultValue: 'Recámaras' })}
+                value={form.recamaras}
+                onChange={v => set('recamaras', v)}
+              />
+              <Counter
+                label={t('vw_banos', { defaultValue: 'Baños' })}
+                value={form.banos}
+                onChange={v => set('banos', v)}
+              />
+              <Counter
+                label={t('vw_estacionamientos', { defaultValue: 'Estacionamientos' })}
+                value={form.estacionamientos}
+                onChange={v => set('estacionamientos', v)}
+                min={0}
+              />
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>{t('vw_antiguedad', { defaultValue: 'Antigüedad' })}</Text>
+                <View style={styles.optionGrid}>
+                  {['Nueva', 'Menos de 5 años', '5-10 años', '10-20 años', 'Más de 20 años'].map(
+                    opt => (
+                      <Pressable
+                        key={opt}
+                        onPress={() => set('antiguedad', opt)}
+                        style={[
+                          styles.optionButton,
+                          form.antiguedad === opt && styles.optionButtonActive,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.optionText,
+                            form.antiguedad === opt && styles.optionTextActive,
+                          ]}
+                        >
+                          {opt}
+                        </Text>
+                      </Pressable>
+                    )
+                  )}
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* PASO 2 */}
+          {step === 2 && (
+            <View style={styles.formContainer}>
+              <Text style={styles.formTitle}>{t('vw_step2_label', { defaultValue: 'Detalles' })}</Text>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>{t('vw_titulo', { defaultValue: 'Título' })}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t('vw_titulo_ph', { defaultValue: 'Ej. Casa moderna con jardín' })}
+                  placeholderTextColor="#8A8A84"
+                  value={form.titulo}
+                  onChangeText={v => set('titulo', v)}
+                  maxLength={80}
+                />
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>{t('vd_f_precio', { defaultValue: 'Precio' })}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="$0,000,000"
+                  placeholderTextColor="#8A8A84"
+                  keyboardType="decimal-pad"
+                  value={form.precio}
+                  onChangeText={v => set('precio', v)}
+                />
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>{t('vd_f_superficie', { defaultValue: 'Superficie (m²)' })}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="000"
+                  placeholderTextColor="#8A8A84"
+                  keyboardType="decimal-pad"
+                  value={form.superficie}
+                  onChangeText={v => set('superficie', v)}
+                />
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>{t('vd_f_descripcion', { defaultValue: 'Descripción' })}</Text>
+                <TextInput
+                  style={[styles.input, styles.textarea]}
+                  placeholder={t('vd_f_descripcion_ph', { defaultValue: 'Describe tu propiedad...' })}
+                  placeholderTextColor="#8A8A84"
+                  value={form.descripcion}
+                  onChangeText={v => set('descripcion', v)}
+                  multiline
+                  numberOfLines={5}
+                  textAlignVertical="top"
+                />
+              </View>
+
+              {/* FOTOS */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>{t('vw_fotos_label', { defaultValue: 'Fotos' })}</Text>
+                <Text style={styles.fieldSubtext}>
+                  {fotos.length}/15 {t('vw_fotos_sub', { defaultValue: 'fotos (mínimo 3)' })}
+                </Text>
+
+                <View style={styles.fotosGrid}>
+                  {fotos.map((f, i) => (
+                    <View key={f.id} style={styles.fotoItem}>
+                      <Image source={{ uri: f.uri }} style={styles.fotoImage} />
+                      {i === 0 && <Text style={styles.fotoCover}>{t('vw_fotos_portada', { defaultValue: 'Portada' })}</Text>}
+                      <Pressable
+                        onPress={() => removeFoto(f.id)}
+                        style={styles.fotoRemove}
+                      >
+                        <Text style={styles.fotoRemoveText}>✕</Text>
+                      </Pressable>
+                    </View>
+                  ))}
+
+                  {fotos.length < 15 && (
+                    <Pressable
+                      onPress={pickImages}
+                      style={styles.fotoAdd}
+                    >
+                      <Text style={styles.fotoAddText}>+</Text>
+                    </Pressable>
+                  )}
+                </View>
+
+                {fotos.length < 3 && (
+                  <Text style={styles.fotoWarning}>
+                    ⚠ {t('vw_fotos_min_warning', { defaultValue: 'Se requieren al menos 3 fotos' })}
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
+
+          {/* PASO 3 */}
+          {step === 3 && (
+            <View style={styles.formContainer}>
+              <Text style={styles.formTitle}>{t('vw_amenidades_label', { defaultValue: 'Amenidades' })}</Text>
+
+              <View style={styles.chipsGrid}>
+                {AMENIDADES_KEYS.map(k => {
+                  const active = form.amenidades.includes(k);
+                  return (
+                    <Pressable
+                      key={k}
+                      onPress={() => toggleAmenidad(k)}
+                      style={[styles.chip, active && styles.chipActive]}
+                    >
+                      {active && <Text style={styles.chipCheck}>✓</Text>}
+                      <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                        {t(k, { defaultValue: k })}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          {/* PASO 4 */}
+          {step === 4 && (
+            <View style={styles.formContainer}>
+              <Text style={styles.formTitle}>{t('vw_servicios_label', { defaultValue: 'Servicios' })}</Text>
+
+              <View style={styles.servicesGrid}>
+                {SERVICIOS.map(s => {
+                  const active = form.servicios.includes(s.key);
+                  return (
+                    <Pressable
+                      key={s.key}
+                      onPress={() => toggleServicio(s.key)}
+                      style={[styles.serviceCard, active && styles.serviceCardActive]}
+                    >
+                      <Text style={styles.serviceTitle}>{s.label}</Text>
+                      <Text style={styles.serviceTag}>
+                        {active ? `✓ ${t('vw_srv_incluido', { defaultValue: 'Incluido' })}` : `+ ${t('vw_srv_agregar', { defaultValue: 'Agregar' })}`}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>{t('vd_f_nombre', { defaultValue: 'Nombre' })}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t('vd_f_nombre_ph', { defaultValue: 'Tu nombre completo' })}
+                  placeholderTextColor="#8A8A84"
+                  value={form.nombre}
+                  onChangeText={v => set('nombre', v)}
+                />
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>{t('vd_f_telefono', { defaultValue: 'Teléfono' })}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="+52 000 000 0000"
+                  placeholderTextColor="#8A8A84"
+                  keyboardType="phone-pad"
+                  value={form.telefono}
+                  onChangeText={v => set('telefono', v)}
+                />
+              </View>
+
+              {errorEnvio && (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorText}>{errorEnvio}</Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* NAVIGATION BUTTONS */}
+          <View style={styles.navRow}>
+            {step > 1 && !enviando && (
+              <Pressable
+                onPress={() => setStep(s => s - 1)}
+                style={({ pressed }) => [styles.btnSecondary, pressed && styles.btnSecondaryPressed]}
+              >
+                <Text style={styles.btnSecondaryText}>{t('vw_anterior', { defaultValue: 'Atrás' })}</Text>
+              </Pressable>
+            )}
+            <Pressable
+              onPress={handleSubmit}
+              disabled={!canNext() || enviando}
+              style={({ pressed }) => [
+                styles.btnPrimary,
+                (!canNext() || enviando) && styles.btnPrimaryDisabled,
+                pressed && styles.btnPrimaryPressed,
+              ]}
+            >
+              {enviando ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.btnPrimaryText}>
+                  {progresoSubida
+                    ? progresoSubida
+                    : step < 4
+                      ? t('vw_siguiente', { defaultValue: 'Siguiente' })
+                      : t('vw_publicar_btn', { defaultValue: 'Publicar' })}
+                </Text>
+              )}
+            </Pressable>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#0A0A0A',
+  },
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+  },
+  hero: {
+    marginBottom: 24,
+  },
+  heroOverline: {
+    color: '#A07840',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  heroTitle: {
+    color: '#F5F5F0',
+    fontSize: 28,
+    fontWeight: '300',
+    lineHeight: 36,
+    letterSpacing: -0.2,
+    marginBottom: 12,
+  },
+  heroTitleEmphasis: {
+    color: '#C39B5F',
+    fontStyle: 'italic',
+  },
+  heroSubtitle: {
+    color: '#B2B2AA',
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 32,
+    paddingHorizontal: 8,
+  },
+  progressStep: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  progressCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1a1a1a',
+    borderWidth: 2,
+    borderColor: '#333333',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressCircleActive: {
+    borderColor: '#A07840',
+    backgroundColor: 'rgba(160, 120, 64, 0.2)',
+  },
+  progressNum: {
+    color: '#64748B',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  progressNumActive: {
+    color: '#A07840',
+  },
+  formContainer: {
+    marginBottom: 32,
+  },
+  formTitle: {
+    color: '#F5F5F0',
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 20,
+    letterSpacing: -0.2,
+  },
+  fieldGroup: {
+    marginBottom: 18,
+  },
+  fieldLabel: {
+    color: '#F5F5F0',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  fieldSubtext: {
+    color: '#64748B',
+    fontSize: 11,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1,
+    borderColor: '#333333',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: '#F5F5F0',
+    fontSize: 14,
+    fontWeight: '400',
+  },
+  textarea: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  counterField: {
+    marginBottom: 18,
+  },
+  counterLabel: {
+    color: '#F5F5F0',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  counterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1,
+    borderColor: '#333333',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  counterBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: 'rgba(160, 120, 64, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  counterBtnPressed: {
+    opacity: 0.7,
+  },
+  counterBtnText: {
+    color: '#A07840',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  counterValue: {
+    color: '#F5F5F0',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  optionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  optionButton: {
+    flex: 1,
+    minWidth: '48%',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#333333',
+    borderRadius: 10,
+    backgroundColor: '#1a1a1a',
+    alignItems: 'center',
+  },
+  optionButtonActive: {
+    borderColor: '#A07840',
+    backgroundColor: 'rgba(160, 120, 64, 0.2)',
+  },
+  optionText: {
+    color: '#B2B2AA',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  optionTextActive: {
+    color: '#A07840',
+  },
+  fotosGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  fotoItem: {
+    width: '31%',
+    aspectRatio: 1,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1,
+    borderColor: '#333333',
+    position: 'relative',
+  },
+  fotoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  fotoCover: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    backgroundColor: 'rgba(160, 120, 64, 0.9)',
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '700',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  fotoRemove: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fotoRemoveText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  fotoAdd: {
+    width: '31%',
+    aspectRatio: 1,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: 'rgba(160, 120, 64, 0.4)',
+    backgroundColor: 'rgba(160, 120, 64, 0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fotoAddText: {
+    color: '#A07840',
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  fotoWarning: {
+    color: '#DC2626',
+    fontSize: 11,
+    marginTop: 8,
+    fontWeight: '500',
+  },
+  chipsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chip: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#333333',
+    backgroundColor: '#1a1a1a',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  chipActive: {
+    borderColor: '#A07840',
+    backgroundColor: 'rgba(160, 120, 64, 0.15)',
+  },
+  chipCheck: {
+    color: '#A07840',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  chipText: {
+    color: '#B2B2AA',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  chipTextActive: {
+    color: '#A07840',
+  },
+  servicesGrid: {
+    gap: 10,
+  },
+  serviceCard: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333333',
+    backgroundColor: '#1a1a1a',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  serviceCardActive: {
+    borderColor: '#A07840',
+    backgroundColor: 'rgba(160, 120, 64, 0.1)',
+  },
+  serviceTitle: {
+    color: '#F5F5F0',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  serviceTag: {
+    color: '#A07840',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  errorBox: {
+    backgroundColor: 'rgba(220, 38, 38, 0.15)',
+    borderLeftWidth: 3,
+    borderLeftColor: '#DC2626',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  errorText: {
+    color: '#F5F5F0',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  navRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 32,
+  },
+  btnSecondary: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#333333',
+    backgroundColor: '#1a1a1a',
+    alignItems: 'center',
+  },
+  btnSecondaryPressed: {
+    opacity: 0.8,
+  },
+  btnSecondaryText: {
+    color: '#F5F5F0',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  btnPrimary: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  btnPrimaryPressed: {
+    opacity: 0.88,
+  },
+  btnPrimaryDisabled: {
+    opacity: 0.5,
+  },
+  btnPrimaryText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  successContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  successIcon: {
+    fontSize: 60,
+    marginBottom: 16,
+  },
+  successTitle: {
+    color: '#F5F5F0',
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  successText: {
+    color: '#B2B2AA',
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  successButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    backgroundColor: '#3B82F6',
+    borderRadius: 10,
+  },
+  successButtonPressed: {
+    opacity: 0.88,
+  },
+  successButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+});
 
 // ── Nominatim autocomplete hook ───────────────────────────────────────────────
 function useNominatim() {
